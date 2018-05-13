@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package api;
+
+import "base.proto";
+import "discovery.proto";
+
+message Cluster {
+    string name = 1;
+
+    int32 connect_timeout = 2;
+
+    repeated HttpAddress hosts = 3;
+
+    LbStrategy lb_strategy = 4;
+    LbConfig lb_config = 5;
+
+    enum LbStrategy {
+        ROUND_ROBIN = 0;
+
+        LEAST_CONNECTIONS = 1;
+
+        RING_HASH = 2;
+    }
+
+    message LbConfig {
+        int32 weight = 1;
+    }
+}
+
+message ClusterDiscoveryResponse {
+    repeated Cluster clusters = 1;
+}
+
+service ClusterDiscoveryService {
+    rpc RetrieveClusters(DiscoveryRequest) returns (ClusterDiscoveryResponse) {}
+}
+
+

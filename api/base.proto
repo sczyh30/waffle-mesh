@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package api;
+
+message Empty {}
+
+message VersionInfo {
+    string releaseVersion = 1;
+    string releaseDate = 2;
+}
+
+message HttpAddress {
+    string host = 1;
+    uint32 port = 2;
+}
+
+message Node {
+    string id = 1;
+
+    string cluster = 2;
+}
