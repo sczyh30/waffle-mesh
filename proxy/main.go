@@ -6,8 +6,9 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/sczyh30/waffle-mesh/proxy/server"
 	"github.com/sczyh30/waffle-mesh/pkg/cmd"
+	"github.com/sczyh30/waffle-mesh/proxy/server"
+	"log"
 )
 
 var proxyArgs server.ProxyArgs
@@ -30,6 +31,8 @@ var command = &cobra.Command{
 		}
 
 		cmd.WaitSignal(stop)
+		log.Println("Stopping the Waffle Proxy server...")
+
 		return nil
 	},
 }
@@ -54,4 +57,3 @@ func init() {
 		command.PersistentFlags().AddGoFlag(gf)
 	})
 }
-

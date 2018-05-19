@@ -1,10 +1,12 @@
 package server
 
 import (
+	"fmt"
+	"log"
+
 	"github.com/sczyh30/waffle-mesh/proxy/metrics"
 	"github.com/sczyh30/waffle-mesh/proxy/discovery"
 	"github.com/sczyh30/waffle-mesh/proxy/network"
-	"fmt"
 	"github.com/sczyh30/waffle-mesh/proxy/network/config"
 	"github.com/sczyh30/waffle-mesh/proxy/route"
 )
@@ -54,6 +56,7 @@ func (s *ProxyServer) AddStartHandler(h startHandler) {
 }
 
 func (s *ProxyServer) StartProxy(stop chan struct{}) error {
+	log.Println("Initializing the Waffle Proxy server...")
 	for _, fn := range s.startHandlerChain {
 		if err := fn(stop); err != nil {
 			return err

@@ -7,3 +7,7 @@ type DiscoveryProvider struct {
 	eds *api.EndpointDiscoveryServiceServer
 	rds *api.RouteDiscoveryServiceServer
 }
+
+func (p *DiscoveryProvider) Start(stop chan struct{}) error {
+	return nil
+}
