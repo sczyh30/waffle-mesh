@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package api;
 
-import "base.proto";
 import "discovery.proto";
 
 message Cluster {
@@ -10,22 +9,20 @@ message Cluster {
 
     int32 connect_timeout = 2;
 
-    repeated HttpAddress hosts = 3;
-
-    LbStrategy lb_strategy = 4;
-    LbConfig lb_config = 5;
+    LbStrategy lb_strategy = 3;
+    LbConfig lb_config = 4;
 
     enum LbStrategy {
         ROUND_ROBIN = 0;
 
-        LEAST_CONNECTIONS = 1;
+        LEAST_REQUESTS = 1;
 
-        RING_HASH = 2;
+        CONSISTENT_HASH = 2;
+
+        RANDOM = 3;
     }
 
-    message LbConfig {
-        int32 weight = 1;
-    }
+    message LbConfig {}
 }
 
 message ClusterDiscoveryResponse {

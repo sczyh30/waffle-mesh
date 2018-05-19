@@ -1,3 +1,89 @@
 syntax = "proto3";
 
 package api;
+
+import "google/protobuf/duration.proto";
+
+import "discovery.proto";
+
+message RouteConfig {
+    string name = 1;
+
+    repeated RouteDetails route_details = 2;
+}
+
+message RouteDetails {
+    string name = 1;
+
+    repeated string domains = 2;
+
+    repeated RouteEntry routes = 3;
+}
+
+message RouteEntry {
+    RouteMatch match = 1;
+
+    oneof action {
+        RouteAction route = 2;
+    }
+}
+
+message RouteMatch {
+    oneof path_pattern {
+        string prefix = 1;
+
+        string exact_path = 2;
+
+        string regex = 3;
+    }
+
+    repeated HeaderMatch headers = 4;
+}
+
+message HeaderMatch {
+    string name = 1;
+    oneof header_match_pattern {
+        string exact_match = 2;
+
+        string regex_match = 3;
+    }
+}
+
+message RouteAction {
+    oneof cluster_pattern {
+        string cluster = 1;
+
+        WeightedCluster weighted_cluster = 2;
+    }
+
+    int32 timeout_ms = 3;
+
+    message RetryStrategy {
+        string retry_type = 1;
+
+        uint32 retry_times = 2;
+
+        google.protobuf.Duration retry_timeout = 3;
+    }
+
+    RetryStrategy retry_strategy = 4;
+}
+
+message WeightedCluster {
+    message ClusterWeightPair {
+        string name = 1;
+
+        uint32 weight = 2;
+    }
+
+    repeated ClusterWeightPair clusters = 1;
+
+}
+
+message RouteDiscoveryResponse {
+    repeated RouteEntry route_rules = 1;
+}
+
+service RouteDiscoveryService {
+    rpc RetrieveRoutes(DiscoveryRequest) returns (RouteDiscoveryResponse) {}
+}

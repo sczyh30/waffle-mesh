@@ -5,5 +5,7 @@ package api;
 import "base.proto";
 
 message DiscoveryRequest {
-    Node node = 1;
+    string targetName = 1;
+
+    string traceId = 2;
 }

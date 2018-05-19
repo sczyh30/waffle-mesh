@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package api;
-
-message ServiceInfo {
-    string serviceName = 1;
-}

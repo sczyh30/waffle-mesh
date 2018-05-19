@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package api;
+
+import "base.proto";
+import "discovery.proto";
+
+message ClusterEndpoints {
+    string clusterName = 1;
+
+    repeated Endpoint endpoints = 2;
+}
+
+message Endpoint {
+    HttpAddress address = 1;
+
+    uint32 lb_weight = 2;
+}
+
+message EndpointDiscoveryResponse {
+    repeated ClusterEndpoints result = 1;
+}
+
+service EndpointDiscoveryService {
+    rpc RetrieveEndpoints(DiscoveryRequest) returns (EndpointDiscoveryResponse) {}
+}

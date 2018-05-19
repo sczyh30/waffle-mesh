@@ -2,7 +2,6 @@
 .idea
 *.iml
 out
-gen
 
 # Go template
 
@@ -14,8 +13,5 @@ vendor
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
-
-!api/gen/
-
 
 
