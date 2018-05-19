@@ -7,7 +7,7 @@ import (
 )
 
 type EndpointDiscoveryServiceImpl struct {
-	controller *k8s.Controller
+	Controller *k8s.Controller
 }
 
 func (s *EndpointDiscoveryServiceImpl) RetrieveEndpoints(c context.Context, req *api.DiscoveryRequest) (*api.EndpointDiscoveryResponse, error) {

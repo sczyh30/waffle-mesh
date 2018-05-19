@@ -2,12 +2,12 @@ package discovery
 
 import (
 	"github.com/sczyh30/waffle-mesh/api/gen"
+	"github.com/sczyh30/waffle-mesh/brain/k8s/crd"
 	"golang.org/x/net/context"
-	"github.com/sczyh30/waffle-mesh/brain/k8s"
 )
 
 type RouteDiscoveryServiceImpl struct {
-	controller *k8s.Controller
+	Controller *crd.RouteRuleController
 }
 
 func (s *RouteDiscoveryServiceImpl) RetrieveRoutes(c context.Context, req *api.DiscoveryRequest) (*api.RouteDiscoveryResponse, error) {

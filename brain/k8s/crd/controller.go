@@ -1,5 +1,35 @@
 package crd
 
+import (
+	clientset "github.com/sczyh30/waffle-mesh/brain/k8s/gen/clientset/versioned"
+	listers "github.com/sczyh30/waffle-mesh/brain/k8s/gen/listers/crd/v1"
+	"k8s.io/client-go/util/workqueue"
+	"k8s.io/client-go/tools/cache"
+	"github.com/sczyh30/waffle-mesh/brain/k8s"
+	"log"
+)
+
+type RouteRuleController struct {
+	client clientset.Interface
+
+	routeLister        listers.RouteRuleLister
+	routeSynced        cache.InformerSynced
+
+	queue  workqueue.RateLimitingInterface
+}
+
+func NewRouteRuleController(options k8s.ControllerOptions) *RouteRuleController {
+	log.Printf("RouteRule CRD controller watching Kubernetes namespace %s\n", options.WatchedNamespace)
+
+	controller := &RouteRuleController{}
+
+	return controller
+}
+
+func (c *RouteRuleController) Run(stopCh chan struct{}) {
+
+}
+
 /*import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"

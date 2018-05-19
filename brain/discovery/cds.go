@@ -7,7 +7,7 @@ import (
 )
 
 type ClusterDiscoveryServiceImpl struct {
-	controller *k8s.Controller
+	Controller *k8s.Controller
 }
 
 func (s *ClusterDiscoveryServiceImpl) RetrieveClusters(c context.Context, req *api.DiscoveryRequest) (*api.ClusterDiscoveryResponse, error) {

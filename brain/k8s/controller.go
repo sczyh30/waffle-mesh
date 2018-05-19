@@ -117,21 +117,21 @@ func (c *Controller) createInformer(o runtime.Object, resyncPeriod time.Duration
 			AddFunc: func(obj interface{}) {
 				key, err := cache.MetaNamespaceKeyFunc(obj)
 				if err == nil {
-					c.queue.Add(key)
+					c.queue.AddRateLimited(key)
 				}
 			},
 			UpdateFunc: func(old, cur interface{}) {
 				if !reflect.DeepEqual(old, cur) {
-					key, err := cache.MetaNamespaceKeyFunc(new)
+					key, err := cache.MetaNamespaceKeyFunc(cur)
 					if err == nil {
-						c.queue.Add(key)
+						c.queue.AddRateLimited(key)
 					}
 				}
 			},
 			DeleteFunc: func(obj interface{}) {
 				key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
 				if err == nil {
-					c.queue.Add(key)
+					c.queue.AddRateLimited(key)
 				}
 			},
 		})
