@@ -5,6 +5,7 @@ import (
 	"github.com/sczyh30/waffle-mesh/api/gen"
 	"errors"
 	"fmt"
+	"github.com/sczyh30/waffle-mesh/proxy/cluster"
 )
 
 const (
@@ -21,13 +22,13 @@ func (r *Router) HandleRequest(writer http.ResponseWriter, request *http.Request
 
 	routes, err := FindMatchingRoutes(host)
 	if err != nil {
-		r.handleError(writer, err, 404)
+		r.handleError(writer, err, http.StatusNotFound)
 		return STOP
 	}
 
 	routeAction, err := r.findFirstMatchingRouteAction(routes, request)
 	if err != nil {
-		r.handleError(writer, err, 404)
+		r.handleError(writer, err, http.StatusNotFound)
 		return STOP
 	}
 
@@ -36,9 +37,25 @@ func (r *Router) HandleRequest(writer http.ResponseWriter, request *http.Request
 	return STOP
 }
 
-func (r *Router) executeRouteAction(action *api.RouteAction, writer http.ResponseWriter, request *http.Request) error {
+func (r *Router) executeRouteAction(action *RouteActionWrapper, writer http.ResponseWriter, request *http.Request) {
+	clusterName := action.clusterPicker.NextCluster()
+	targetCluster := cluster.GetCluster(clusterName)
+	if targetCluster == nil {
+		r.handleError(writer, errors.New("no matching cluster"), http.StatusNotFound)
+		return
+	}
 
-	return nil
+	_, err := targetCluster.NextClient(r.lbMetadata(request))
+	if err != nil {
+		r.handleError(writer, err, http.StatusInternalServerError)
+		return
+	}
+
+
+}
+
+func (r *Router) lbMetadata(request *http.Request) *cluster.LbMetadata {
+	return &cluster.LbMetadata{}
 }
 
 func (r *Router) handleError(w http.ResponseWriter, err error, status int) {
@@ -46,7 +63,7 @@ func (r *Router) handleError(w http.ResponseWriter, err error, status int) {
 	fmt.Fprint(w, err.Error())
 }
 
-func (r *Router) findFirstMatchingRouteAction(routes []*api.RouteEntry, request *http.Request) (*api.RouteAction, error) {
+func (r *Router) findFirstMatchingRouteAction(routes []*api.RouteEntry, request *http.Request) (*RouteActionWrapper, error) {
 	path := request.URL.Path
 
 	for _, curRoute := range routes {
@@ -55,7 +72,14 @@ func (r *Router) findFirstMatchingRouteAction(routes []*api.RouteEntry, request 
 			headerMatches := curRoute.Match.Headers
 			// Then match the header pattern.
 			if headerMatches == nil || r.matchHeaderPattern(headerMatches, request.Header) {
-				return curRoute.GetRoute(), nil
+				if action, ok := curRoute.Action.(*RouteActionWrapper); ok {
+					return action, nil
+				} else {
+					// Directly convert (CHECK HERE!)
+					action := FromAction(curRoute.GetRoute())
+					curRoute.Action = action
+					return action, nil
+				}
 			}
 		}
 	}

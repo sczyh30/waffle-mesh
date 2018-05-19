@@ -28,7 +28,7 @@ func (m *Empty) Reset()         { *m = Empty{} }
 func (m *Empty) String() string { return proto.CompactTextString(m) }
 func (*Empty) ProtoMessage()    {}
 func (*Empty) Descriptor() ([]byte, []int) {
-	return fileDescriptor_base_26a312076af31697, []int{0}
+	return fileDescriptor_base_535e3163a478f69c, []int{0}
 }
 func (m *Empty) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Empty.Unmarshal(m, b)
@@ -60,7 +60,7 @@ func (m *VersionInfo) Reset()         { *m = VersionInfo{} }
 func (m *VersionInfo) String() string { return proto.CompactTextString(m) }
 func (*VersionInfo) ProtoMessage()    {}
 func (*VersionInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_base_26a312076af31697, []int{1}
+	return fileDescriptor_base_535e3163a478f69c, []int{1}
 }
 func (m *VersionInfo) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VersionInfo.Unmarshal(m, b)
@@ -106,7 +106,7 @@ func (m *HttpAddress) Reset()         { *m = HttpAddress{} }
 func (m *HttpAddress) String() string { return proto.CompactTextString(m) }
 func (*HttpAddress) ProtoMessage()    {}
 func (*HttpAddress) Descriptor() ([]byte, []int) {
-	return fileDescriptor_base_26a312076af31697, []int{2}
+	return fileDescriptor_base_535e3163a478f69c, []int{2}
 }
 func (m *HttpAddress) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_HttpAddress.Unmarshal(m, b)
@@ -140,63 +140,16 @@ func (m *HttpAddress) GetPort() uint32 {
 	return 0
 }
 
-type Node struct {
-	Id                   string   `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
-	Cluster              string   `protobuf:"bytes,2,opt,name=cluster" json:"cluster,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *Node) Reset()         { *m = Node{} }
-func (m *Node) String() string { return proto.CompactTextString(m) }
-func (*Node) ProtoMessage()    {}
-func (*Node) Descriptor() ([]byte, []int) {
-	return fileDescriptor_base_26a312076af31697, []int{3}
-}
-func (m *Node) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Node.Unmarshal(m, b)
-}
-func (m *Node) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Node.Marshal(b, m, deterministic)
-}
-func (dst *Node) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Node.Merge(dst, src)
-}
-func (m *Node) XXX_Size() int {
-	return xxx_messageInfo_Node.Size(m)
-}
-func (m *Node) XXX_DiscardUnknown() {
-	xxx_messageInfo_Node.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Node proto.InternalMessageInfo
-
-func (m *Node) GetId() string {
-	if m != nil {
-		return m.Id
-	}
-	return ""
-}
-
-func (m *Node) GetCluster() string {
-	if m != nil {
-		return m.Cluster
-	}
-	return ""
-}
-
 func init() {
 	proto.RegisterType((*Empty)(nil), "api.Empty")
 	proto.RegisterType((*VersionInfo)(nil), "api.VersionInfo")
 	proto.RegisterType((*HttpAddress)(nil), "api.HttpAddress")
-	proto.RegisterType((*Node)(nil), "api.Node")
 }
 
-func init() { proto.RegisterFile("base.proto", fileDescriptor_base_26a312076af31697) }
+func init() { proto.RegisterFile("base.proto", fileDescriptor_base_535e3163a478f69c) }
 
-var fileDescriptor_base_26a312076af31697 = []byte{
-	// 180 bytes of a gzipped FileDescriptorProto
+var fileDescriptor_base_535e3163a478f69c = []byte{
+	// 147 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4a, 0x4a, 0x2c, 0x4e,
 	0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x4e, 0x2c, 0xc8, 0x54, 0x62, 0xe7, 0x62, 0x75,
 	0xcd, 0x2d, 0x28, 0xa9, 0x54, 0x0a, 0xe7, 0xe2, 0x0e, 0x4b, 0x2d, 0x2a, 0xce, 0xcc, 0xcf, 0xf3,
@@ -204,9 +157,7 @@ var fileDescriptor_base_26a312076af31697 = []byte{
 	0x4a, 0x30, 0x2a, 0x30, 0x6a, 0x70, 0x06, 0xa1, 0x89, 0x0a, 0x29, 0x70, 0x71, 0x43, 0x45, 0x5c,
 	0x12, 0x4b, 0x52, 0x25, 0x98, 0xc0, 0x8a, 0x90, 0x85, 0x94, 0x4c, 0xb9, 0xb8, 0x3d, 0x4a, 0x4a,
 	0x0a, 0x1c, 0x53, 0x52, 0x8a, 0x52, 0x8b, 0x8b, 0x85, 0x84, 0xb8, 0x58, 0x32, 0xf2, 0x8b, 0x4b,
-	0xa0, 0xc6, 0x81, 0xd9, 0x20, 0xb1, 0x82, 0xfc, 0xa2, 0x12, 0xb0, 0x6e, 0xde, 0x20, 0x30, 0x5b,
-	0xc9, 0x80, 0x8b, 0xc5, 0x2f, 0x3f, 0x25, 0x55, 0x88, 0x8f, 0x8b, 0x29, 0x33, 0x05, 0xaa, 0x9a,
-	0x29, 0x33, 0x45, 0x48, 0x82, 0x8b, 0x3d, 0x39, 0xa7, 0xb4, 0xb8, 0x24, 0xb5, 0x08, 0x6a, 0x19,
-	0x8c, 0x9b, 0xc4, 0x06, 0xf6, 0x96, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x74, 0x02, 0x0b, 0x5a,
-	0xe4, 0x00, 0x00, 0x00,
+	0xa0, 0xc6, 0x81, 0xd9, 0x20, 0xb1, 0x82, 0xfc, 0xa2, 0x12, 0xb0, 0x6e, 0xde, 0x20, 0x30, 0x3b,
+	0x89, 0x0d, 0xec, 0x48, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0xfd, 0xa0, 0x31, 0x31, 0xb2,
+	0x00, 0x00, 0x00,
 }

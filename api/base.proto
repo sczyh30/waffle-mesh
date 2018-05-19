@@ -13,9 +13,3 @@ message HttpAddress {
     string host = 1;
     uint32 port = 2;
 }
-
-message Node {
-    string id = 1;
-
-    string cluster = 2;
-}

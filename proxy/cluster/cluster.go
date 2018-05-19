@@ -7,7 +7,6 @@ import (
 )
 
 type ClusterConfig api.Cluster
-
 type ClientPool map[api.HttpAddress]*http.Client
 
 type ClusterEntry struct {

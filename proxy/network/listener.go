@@ -1,19 +1,14 @@
 package network
 
 import (
-	"fmt"
-	"io"
 	"log"
-	"net/url"
 	"net/http"
 	"strconv"
 	"sync"
 
 	"github.com/sczyh30/waffle-mesh/proxy/network/config"
 	"github.com/sczyh30/waffle-mesh/proxy/network/core"
-	"github.com/sczyh30/waffle-mesh/proxy/route"
-	"github.com/sczyh30/waffle-mesh/proxy/runtime"
-
+	"errors"
 )
 
 // Proxy listener observes the port and process the requests.
@@ -34,7 +29,7 @@ type listener struct {
 	serverType ServerType
 	server http.Server
 
-	handlerChain []*HttpHandler
+	handlerChain []HttpHandler
 	config config.ServerConfig
 
 	mutex *sync.RWMutex
@@ -45,13 +40,17 @@ func (l *listener) AddHandler(handler *HttpHandler) {
 }
 
 func (l *listener) BindAndListen() error {
+	if len(l.handlerChain) == 0 {
+		return errors.New("empty handler chain")
+	}
+
 	var err error
 	// Resolve host and port.
 	addr := l.config.Host + ":" + strconv.Itoa(l.config.Port)
 	l.server.Addr = addr
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", handleRequest)
+	mux.HandleFunc("/", l.handleRequest)
 	l.server.Handler = mux
 
 	switch l.serverType {
@@ -61,81 +60,15 @@ func (l *listener) BindAndListen() error {
 		err = l.server.ListenAndServeTLS(l.config.TlsConfig.CertFilePath, l.config.TlsConfig.KeyFilePath)
 	}
 	if err != nil {
-		log.Fatal("ListenAndServe: ", err)
+		log.Fatal("error when listening to port " + strconv.Itoa(l.config.Port), err)
 	}
 	return err
 }
 
-func handleRequest(w http.ResponseWriter, r *http.Request)  {
-	client := core.NewHttp2Client()
-
-	path := r.URL.Path
-	host := r.Host
-	//clientAddr := r.RemoteAddr
-	method := r.Method
-
-	routes, err := route.FindMatchingRoutes(host)
-	if err != nil {
-		//log.Fatal(err)
-		w.WriteHeader(404)
-		fmt.Fprint(w, "no matching routes")
-		return
+func (l *listener) handleRequest(w http.ResponseWriter, r *http.Request)  {
+	for _, handler := range l.handlerChain {
+		handler.HandleRequest(w, r)
 	}
-	var targetClusterName = ""
-	for _, curRoute := range routes {
-		if curRoute.Match.GetExactPath() != "" {
-			// Match exact path.
-			if route.MatchExact(curRoute.Match.GetExactPath(), path) {
-				// TODO!
-				targetClusterName = curRoute.GetRoute().GetCluster()
-			}
-		} else if curRoute.Match.GetPrefix() != "" {
-			// Match path prefix.
-			if route.MatchPrefix(curRoute.Match.GetPrefix(), path) {
-				// TODO!
-				targetClusterName = curRoute.GetRoute().GetCluster()
-			}
-		} else if curRoute.Match.GetRegex() != "" {
-			if route.MatchRegex(curRoute.Match.GetRegex(), path) {
-				// TODO!
-				targetClusterName = curRoute.GetRoute().GetCluster()
-			}
-			// Match regex pattern.
-		}
-	}
-	// No matching
-	if targetClusterName == "" {
-		w.WriteHeader(404)
-		fmt.Fprint(w, "no matching route")
-		return
-	}
-	targetCluster := runtime.GetCluster(targetClusterName)
-	if targetCluster == nil {
-		w.WriteHeader(404)
-		fmt.Fprint(w, "no matching cluster")
-		return
-	}
-
-	fmt.Fprintf(w, "Cluster name: %s\n", targetCluster.Name)
-	fmt.Fprintln(w, "Cluster registered endpoints:")
-	for _, address := range targetCluster.Hosts {
-		fmt.Fprintf(w, "host: %s, port: %d\n", address.Host, address.Port)
-	}
-	fmt.Fprintln(w)
-
-	targetUrl, _ := url.Parse("https://" + targetCluster.Hosts[0].Host + ":" + fmt.Sprint(targetCluster.Hosts[0].Port) + r.RequestURI)
-	response, err := client.Do(&http.Request{
-		Method: method,
-		URL: targetUrl,
-		Body: r.Body,
-		Header: r.Header,
-	})
-	if err != nil {
-		w.WriteHeader(503)
-		fmt.Fprint(w, "service unavailable: " + err.Error())
-		return
-	}
-	io.Copy(w, response.Body)
 }
 
 func NewListener(serverType ServerType, config config.ServerConfig) Listener {

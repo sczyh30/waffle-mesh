@@ -32,6 +32,11 @@ var routeRuleRegistry = make(map[string]*api.RouteConfig)
 
 func AddRouteRule(name string, rule *api.RouteConfig) {
 	routeRuleRegistry[name] = rule
+	for _, details := range rule.RouteDetails {
+		for _, entry := range details.Routes {
+			entry.Action = FromAction(entry.GetRoute())
+		}
+	}
 }
 
 func RemoveRouteRule(name string) {
