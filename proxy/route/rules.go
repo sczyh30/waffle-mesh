@@ -1,37 +1,17 @@
 package route
 
 import (
-	"github.com/sczyh30/waffle-mesh/api/gen"
 	"errors"
+
+	"github.com/sczyh30/waffle-mesh/api/gen"
 )
 
-type RouteActionWrapper struct {
-	Route *api.RouteAction
+type RouteTable map[string]*api.RouteConfig
 
-	clusterPicker ClusterPicker
-}
+var routeTable = make(RouteTable)
 
-func FromAction(action *api.RouteAction) *RouteActionWrapper {
-	if action.GetCluster() != "" {
-		return &RouteActionWrapper{
-			Route: action,
-			clusterPicker: &SingleClusterPicker{name: action.GetCluster()},
-		}
-	} else if action.GetWeightedCluster() != nil {
-		return &RouteActionWrapper{
-			Route: action,
-			clusterPicker: NewSmoothWeightedClusterPicker(action.GetWeightedCluster()),
-		}
-	}
-	return nil
-}
-
-func (*RouteActionWrapper) isRouteEntry_Action() {}
-
-var routeRuleRegistry = make(map[string]*api.RouteConfig)
-
-func AddRouteRule(name string, rule *api.RouteConfig) {
-	routeRuleRegistry[name] = rule
+func AddRouteRule(rule *api.RouteConfig) {
+	routeTable[rule.Name] = rule
 	for _, details := range rule.RouteDetails {
 		for _, entry := range details.Routes {
 			entry.Action = FromAction(entry.GetRoute())
@@ -39,12 +19,35 @@ func AddRouteRule(name string, rule *api.RouteConfig) {
 	}
 }
 
+func UpdateRouteRule(newConfig *api.RouteConfig) {
+	if oldConfig := routeTable[newConfig.Name]; oldConfig == nil {
+		// Add the new route rule.
+		AddRouteRule(newConfig)
+	} else {
+		// Check if changes made.
+		for _, details := range oldConfig.RouteDetails {
+			for _, entry := range details.Routes {
+				//action := entry.GetAction().(*RouteActionWrapper)
+
+				entry.Action = FromAction(entry.GetRoute())
+			}
+		}
+	}
+
+}
+
 func RemoveRouteRule(name string) {
-	delete(routeRuleRegistry, name)
+	delete(routeTable, name)
+}
+
+func DoUpdate(routes []*api.RouteConfig) {
+	for _, newConfig := range routes {
+		UpdateRouteRule(newConfig)
+	}
 }
 
 func FindMatchingRoutes(host string) ([]*api.RouteEntry, error) {
-	for _, v := range routeRuleRegistry {
+	for _, v := range routeTable {
 		for _, rd := range v.RouteDetails {
 			for _, domain := range rd.Domains {
 				// Match any or match exact domain.
@@ -56,3 +59,26 @@ func FindMatchingRoutes(host string) ([]*api.RouteEntry, error) {
 	}
 	return nil, errors.New("cannot find any matching route rules for target host: " + host)
 }
+
+type RouteActionWrapper struct {
+	Route *api.RouteAction
+
+	clusterPicker ClusterPicker
+}
+
+func FromAction(action *api.RouteAction) *RouteActionWrapper {
+	if action.GetCluster() != "" {
+		return &RouteActionWrapper{
+			Route: action,
+			clusterPicker: &SingleClusterPicker{Name: action.GetCluster()},
+		}
+	} else if action.GetWeightedCluster() != nil {
+		return &RouteActionWrapper{
+			Route: action,
+			clusterPicker: NewSmoothWeightedClusterPicker(action.GetWeightedCluster()),
+		}
+	}
+	return nil
+}
+
+func (*RouteActionWrapper) isRouteEntry_Action() {}

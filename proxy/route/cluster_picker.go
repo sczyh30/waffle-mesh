@@ -51,9 +51,9 @@ func (p *SmoothWeightedClusterPicker) NextCluster() string {
 }
 
 type SingleClusterPicker struct {
-	name string
+	Name string
 }
 
 func (p *SingleClusterPicker) NextCluster() string {
-	return p.name
+	return p.Name
 }

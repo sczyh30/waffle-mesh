@@ -1,10 +1,12 @@
 package route
 
 import (
-	"net/http"
-	"github.com/sczyh30/waffle-mesh/api/gen"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+
+	"github.com/sczyh30/waffle-mesh/api/gen"
 	"github.com/sczyh30/waffle-mesh/proxy/cluster"
 )
 
@@ -37,21 +39,36 @@ func (r *Router) HandleRequest(writer http.ResponseWriter, request *http.Request
 	return STOP
 }
 
-func (r *Router) executeRouteAction(action *RouteActionWrapper, writer http.ResponseWriter, request *http.Request) {
+func (r *Router) executeRouteAction(action *RouteActionWrapper, w http.ResponseWriter, request *http.Request) {
 	clusterName := action.clusterPicker.NextCluster()
 	targetCluster := cluster.GetCluster(clusterName)
 	if targetCluster == nil {
-		r.handleError(writer, errors.New("no matching cluster"), http.StatusNotFound)
+		r.handleError(w, errors.New("no matching cluster"), http.StatusNotFound)
 		return
 	}
 
-	_, err := targetCluster.NextClient(r.lbMetadata(request))
+	client, address, err := targetCluster.NextClient(r.lbMetadata(request))
 	if err != nil {
-		r.handleError(writer, err, http.StatusInternalServerError)
+		r.handleError(w, err, http.StatusInternalServerError)
 		return
 	}
 
+	fmt.Fprintf(w, "Cluster name: %s\n", targetCluster.Name)
+	fmt.Fprintf(w, "Picked endpoint: %s:%d\n", address.Host, address.Port)
+	fmt.Fprintln(w)
 
+	targetUrl := "https://" + address.Host + ":" + fmt.Sprint(address.Port) + request.RequestURI
+	newRequest, err := http.NewRequest(request.Method, targetUrl, request.Body)
+	newRequest.Header = request.Header
+	response, err := client.Do(newRequest)
+	if err != nil {
+		w.WriteHeader(503)
+		fmt.Fprint(w, "service unavailable: " + err.Error())
+		return
+	}
+
+	w.WriteHeader(response.StatusCode)
+	io.Copy(w, response.Body)
 }
 
 func (r *Router) lbMetadata(request *http.Request) *cluster.LbMetadata {

@@ -7,10 +7,15 @@ import (
 )
 
 type ClusterConfig api.Cluster
-type ClientPool map[api.HttpAddress]*http.Client
+type ClientPool map[hostAddress]*http.Client
+
+type hostAddress struct {
+	host string
+	port uint32
+}
 
 type ClusterEntry struct {
-	name string
+	Name string
 	endpoints *api.ClusterEndpoints
 	config *ClusterConfig
 
@@ -26,14 +31,18 @@ func (c *ClusterEntry) updateClusterConfig(config *ClusterConfig) error {
 	return nil
 }
 
-func (c *ClusterEntry) NextClient(metadata *LbMetadata) (*http.Client, error) {
+func (c *ClusterEntry) NextClient(metadata *LbMetadata) (*http.Client, *api.HttpAddress, error) {
 	nextAddress, err := c.lb.PickHost(metadata)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	client := c.clientPool[*nextAddress]
+	addr := hostAddress{
+		host: nextAddress.Host,
+		port: nextAddress.Port,
+	}
+	client := c.clientPool[addr]
 	if client == nil {
 		// TODO: Init the client pool
 	}
-	return client, nil
+	return client, nextAddress, nil
 }

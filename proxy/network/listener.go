@@ -1,6 +1,7 @@
 package network
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -8,12 +9,11 @@ import (
 
 	"github.com/sczyh30/waffle-mesh/proxy/network/config"
 	"github.com/sczyh30/waffle-mesh/proxy/network/core"
-	"errors"
 )
 
 // Proxy listener observes the port and process the requests.
 type Listener interface {
-	AddHandler(handler *HttpHandler)
+	AddHandler(handler HttpHandler)
 
 	BindAndListen() error
 }
@@ -35,7 +35,7 @@ type listener struct {
 	mutex *sync.RWMutex
 }
 
-func (l *listener) AddHandler(handler *HttpHandler) {
+func (l *listener) AddHandler(handler HttpHandler) {
 	l.handlerChain = append(l.handlerChain, handler)
 }
 

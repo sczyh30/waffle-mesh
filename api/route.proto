@@ -81,7 +81,7 @@ message WeightedCluster {
 }
 
 message RouteDiscoveryResponse {
-    repeated RouteEntry route_rules = 1;
+    repeated RouteConfig result = 1;
 }
 
 service RouteDiscoveryService {

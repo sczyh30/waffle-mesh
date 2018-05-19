@@ -1,5 +1,7 @@
 package cluster
 
+import "github.com/sczyh30/waffle-mesh/api/gen"
+
 type ClusterRegistry struct {
 	registryMap map[string]*ClusterEntry
 }
@@ -20,4 +22,12 @@ func RemoveCluster(name string) *ClusterEntry {
 
 func AddCluster(name string, cluster *ClusterEntry) {
 	runtimeClusterRegistry.registryMap[name] = cluster
+}
+
+func DoUpdate(clusters []*api.Cluster, endpoints []*api.ClusterEndpoints) {
+	for _, cluster := range clusters {
+		if runtimeClusterRegistry.registryMap[cluster.Name] == nil {
+
+		}
+	}
 }
