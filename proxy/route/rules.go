@@ -12,10 +12,8 @@ var routeTable = make(RouteTable)
 
 func AddRouteRule(rule *api.RouteConfig) {
 	routeTable[rule.Name] = rule
-	for _, details := range rule.RouteDetails {
-		for _, entry := range details.Routes {
-			entry.Action = FromAction(entry.GetRoute())
-		}
+	for _, entry := range rule.Routes {
+		entry.Action = FromAction(entry.GetRoute())
 	}
 }
 
@@ -25,12 +23,10 @@ func UpdateRouteRule(newConfig *api.RouteConfig) {
 		AddRouteRule(newConfig)
 	} else {
 		// Check if changes made.
-		for _, details := range oldConfig.RouteDetails {
-			for _, entry := range details.Routes {
-				//action := entry.GetAction().(*RouteActionWrapper)
+		for _, entry := range oldConfig.Routes {
+			//action := entry.GetAction().(*RouteActionWrapper)
 
-				entry.Action = FromAction(entry.GetRoute())
-			}
+			entry.Action = FromAction(entry.GetRoute())
 		}
 	}
 
@@ -47,13 +43,11 @@ func DoUpdate(routes []*api.RouteConfig) {
 }
 
 func FindMatchingRoutes(host string) ([]*api.RouteEntry, error) {
-	for _, v := range routeTable {
-		for _, rd := range v.RouteDetails {
-			for _, domain := range rd.Domains {
-				// Match any or match exact domain.
-				if domain == "*" || domain == host {
-					return rd.Routes, nil
-				}
+	for _, routeConfig := range routeTable {
+		for _, domain := range routeConfig.Domains {
+			// Match any or match exact domain.
+			if domain == "*" || domain == host {
+				return routeConfig.Routes, nil
 			}
 		}
 	}
@@ -69,12 +63,12 @@ type RouteActionWrapper struct {
 func FromAction(action *api.RouteAction) *RouteActionWrapper {
 	if action.GetCluster() != "" {
 		return &RouteActionWrapper{
-			Route: action,
+			Route:         action,
 			clusterPicker: &SingleClusterPicker{Name: action.GetCluster()},
 		}
 	} else if action.GetWeightedCluster() != nil {
 		return &RouteActionWrapper{
-			Route: action,
+			Route:         action,
 			clusterPicker: NewSmoothWeightedClusterPicker(action.GetWeightedCluster()),
 		}
 	}

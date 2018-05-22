@@ -22,7 +22,7 @@ type RouteRuleSpec struct {
 
 type RouteSelectorWeight struct {
 	Labels map[string]string `json:"labels"`
-	Weight int               `json:"weight"`
+	Weight uint32               `json:"weight"`
 }
 
 type RouteMatchCondition struct {

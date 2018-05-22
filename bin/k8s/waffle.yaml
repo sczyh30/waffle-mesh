@@ -1,0 +1,21 @@
+# Waffle system namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: waffle-system
+---
+# RouteRule CRD
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: routerules.config.wafflemesh.io
+spec:
+  group: config.wafflemesh.io
+  names:
+    kind: RouteRule
+    listKind: RouteRuleList
+    plural: routerules
+    singular: routerule
+  scope: Namespaced
+  version: v1
+---

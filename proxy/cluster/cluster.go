@@ -2,8 +2,10 @@ package cluster
 
 import (
 	"net/http"
+	"sync"
 
 	"github.com/sczyh30/waffle-mesh/api/gen"
+	"golang.org/x/time/rate"
 )
 
 type ClusterConfig api.Cluster
@@ -15,19 +17,30 @@ type hostAddress struct {
 }
 
 type ClusterEntry struct {
-	Name string
+	name string
 	endpoints *api.ClusterEndpoints
 	config *ClusterConfig
 
 	lb LoadBalancer
 	clientPool ClientPool
+	rateLimiter *rate.Limiter
+
+	mutex *sync.Mutex
 }
 
-func (c *ClusterEntry) updateEndpoints(endpoints *api.ClusterEndpoints) error {
+func (c *ClusterEntry) RateLimiter() *rate.Limiter {
+	return c.rateLimiter
+}
+
+func (c *ClusterEntry) Name() string {
+	return c.name
+}
+
+func (c *ClusterEntry) UpdateEndpoints(endpoints *api.ClusterEndpoints) error {
 	return nil
 }
 
-func (c *ClusterEntry) updateClusterConfig(config *ClusterConfig) error {
+func (c *ClusterEntry) UpdateClusterConfig(config *ClusterConfig) error {
 	return nil
 }
 

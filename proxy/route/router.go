@@ -53,7 +53,7 @@ func (r *Router) executeRouteAction(action *RouteActionWrapper, w http.ResponseW
 		return
 	}
 
-	fmt.Fprintf(w, "Cluster name: %s\n", targetCluster.Name)
+	fmt.Fprintf(w, "Cluster name: %s\n", targetCluster.Name())
 	fmt.Fprintf(w, "Picked endpoint: %s:%d\n", address.Host, address.Port)
 	fmt.Fprintln(w)
 

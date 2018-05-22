@@ -2,10 +2,10 @@ package cluster
 
 import "net/http"
 
-type RateLimiter struct {
+type RateLimitHandler struct {
 
 }
 
-func (l *RateLimiter) HandleRequest(writer http.ResponseWriter, request *http.Request) bool {
+func (l *RateLimitHandler) HandleRequest(writer http.ResponseWriter, request *http.Request) bool {
 	return true
 }

@@ -17,7 +17,7 @@ func (w *ResourceWatcher) StartWatching(stop chan struct{}) error {
 	if w.XdsConsumer == nil {
 		return errors.New("unexpected state for resource discovery service watcher")
 	}
-	ticker := time.NewTicker(time.Second * 20)
+	ticker := time.NewTicker(time.Second * 25)
 	ctx := context.Background()
 	select {
 	case <-stop:

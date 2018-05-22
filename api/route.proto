@@ -9,12 +9,6 @@ import "discovery.proto";
 message RouteConfig {
     string name = 1;
 
-    repeated RouteDetails route_details = 2;
-}
-
-message RouteDetails {
-    string name = 1;
-
     repeated string domains = 2;
 
     repeated RouteEntry routes = 3;

@@ -7,6 +7,7 @@ import (
 	"github.com/sczyh30/waffle-mesh/brain/k8s"
 	"k8s.io/client-go/kubernetes"
 	"github.com/sczyh30/waffle-mesh/brain/k8s/crd"
+	"github.com/sczyh30/waffle-mesh/brain/resource"
 )
 
 const (
@@ -27,6 +28,8 @@ type BrainServer struct {
 	k8sClient kubernetes.Interface
 	k8sController *k8s.Controller
 	k8sRouteRuleController *crd.RouteRuleController
+
+	xdsUpdater *resource.XdsResourceUpdater
 }
 
 func NewServer(args BrainArgs) (*BrainServer, error) {
@@ -77,8 +80,14 @@ func (s *BrainServer) initKubernetesController(args *BrainArgs) error {
 	k8sController := k8s.NewController(s.k8sClient, options)
 	s.k8sController = k8sController
 
-	routeRuleController := crd.NewRouteRuleController(options)
+	routeRuleController, err := crd.NewRouteRuleController(options)
+	if err != nil {
+		return err
+	}
 	s.k8sRouteRuleController = routeRuleController
+
+	updater := resource.NewXdsResourceUpdater(k8sController, routeRuleController)
+	s.xdsUpdater = updater
 
 	s.AddStartHandler(func(stop chan struct{}) error {
 		go s.k8sController.Run(stop)
@@ -106,6 +115,8 @@ func (s *BrainServer) initDiscoveryProvider(args *BrainArgs) error {
 	s.discoveryProvider = provider
 
 	s.AddStartHandler(func(stop chan struct{}) error {
+		go s.xdsUpdater.Start(stop)
+
 		go s.discoveryProvider.Start(stop)
 
 		return nil

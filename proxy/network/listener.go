@@ -25,7 +25,7 @@ const (
 	HTTP2
 )
 
-type listener struct {
+type listenerImpl struct {
 	serverType ServerType
 	server http.Server
 
@@ -35,19 +35,16 @@ type listener struct {
 	mutex *sync.RWMutex
 }
 
-func (l *listener) AddHandler(handler HttpHandler) {
+func (l *listenerImpl) AddHandler(handler HttpHandler) {
 	l.handlerChain = append(l.handlerChain, handler)
 }
 
-func (l *listener) BindAndListen() error {
+func (l *listenerImpl) BindAndListen() error {
 	if len(l.handlerChain) == 0 {
 		return errors.New("empty handler chain")
 	}
 
 	var err error
-	// Resolve host and port.
-	addr := l.config.Host + ":" + strconv.Itoa(l.config.Port)
-	l.server.Addr = addr
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", l.handleRequest)
@@ -65,14 +62,14 @@ func (l *listener) BindAndListen() error {
 	return err
 }
 
-func (l *listener) handleRequest(w http.ResponseWriter, r *http.Request)  {
+func (l *listenerImpl) handleRequest(w http.ResponseWriter, r *http.Request)  {
 	for _, handler := range l.handlerChain {
 		handler.HandleRequest(w, r)
 	}
 }
 
 func NewListener(serverType ServerType, config config.ServerConfig) Listener {
-	l := &listener{
+	l := &listenerImpl{
 		serverType: serverType,
 		config: config,
 	}
@@ -81,5 +78,9 @@ func NewListener(serverType ServerType, config config.ServerConfig) Listener {
 	} else {
 		l.server = core.NewHttpServer()
 	}
+	// Resolve host and port.
+	addr := l.config.Host + ":" + strconv.Itoa(l.config.Port)
+	l.server.Addr = addr
+
 	return l
 }

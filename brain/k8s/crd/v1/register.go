@@ -1,13 +1,13 @@
 package v1
 
 import (
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-
 )
 
 // SchemeGroupVersion is group version used to register these objects
-var SchemeGroupVersion = schema.GroupVersion{Group: "config.waffle.io", Version: "v1"}
+var SchemeGroupVersion = schema.GroupVersion{Group: "config.wafflemesh.io", Version: "v1"}
 
 // Kind takes an unqualified kind and returns back a Group qualified GroupKind
 func Kind(kind string) schema.GroupKind {
@@ -30,5 +30,6 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&RouteRule{},
 		&RouteRuleList{},
 	)
+	metaV1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil
 }

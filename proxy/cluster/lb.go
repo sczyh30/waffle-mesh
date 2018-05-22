@@ -54,11 +54,17 @@ func NewSmoothWeightedRoundRobinLoadBalancer(e *api.ClusterEndpoints) *RoundRobi
 }
 
 type RandomLoadBalancer struct {
-
+	endpoints []*api.Endpoint
 }
 
 func (lb *RandomLoadBalancer) PickHost(m *LbMetadata) (*api.HttpAddress, error) {
 	return nil, nil
+}
+
+func NewRandomLoadBalancer(e *api.ClusterEndpoints) *RandomLoadBalancer {
+	return &RandomLoadBalancer{
+		endpoints: e.Endpoints,
+	}
 }
 
 type ConsistentHashLoadBalancer struct {
