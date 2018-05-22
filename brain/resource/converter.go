@@ -66,8 +66,8 @@ func (c *ConfigConverter) BuildClusterEndpoints(selectorMap map[string]ClusterSe
 }
 
 func (c *ConfigConverter) matchAllLabels(expected map[string]string, actual map[string]string) bool {
-	for k, v := range actual {
-		if expected[k] != v {
+	for k, v := range expected {
+		if actual[k] != v {
 			return false
 		}
 	}
@@ -92,6 +92,7 @@ func (c *ConfigConverter) buildEndpointForCluster(selectorCluster ClusterSelecto
 					labels, exists := podCache.LabelsByIP(ea.IP)
 					// Compare the labels.
 					if !exists || !c.matchAllLabels(selectorCluster.selectorMap, labels) {
+						// log.Printf("Not match. Expected: %v, actual: %v", selectorCluster.selectorMap, labels)
 						continue
 					}
 
@@ -120,6 +121,19 @@ func (c *ConfigConverter) BuildInboundClusters() []*api.Cluster {
 	return nil
 }
 
+func (c *ConfigConverter) parseWeightSelectorPair(serviceName string, weightSelectorPair crdV1.RouteSelectorWeight) (string, ClusterSelectorPair) {
+	labelSelectorDesc := c.parseLabelSelectors(weightSelectorPair.Labels)
+	// Generate final cluster name.
+	clusterName := fmt.Sprintf("%s|%s|%s|%s", OutboundPrefix, serviceName, HttpTypePrefix, labelSelectorDesc)
+	clusterSelectorPair := ClusterSelectorPair{
+		clusterName: clusterName,
+		serviceName: serviceName,
+		weight: weightSelectorPair.Weight,
+		selectorMap: weightSelectorPair.Labels,
+	}
+	return clusterName, clusterSelectorPair
+}
+
 func (c *ConfigConverter) AggregateProxyRouteConfigs(rules []*crdV1.RouteRule) ([]*api.RouteConfig, map[string]ClusterSelectorPair) {
 	var configs []*api.RouteConfig
 	selectors := make(map[string]ClusterSelectorPair)
@@ -136,9 +150,9 @@ func (c *ConfigConverter) AggregateProxyRouteConfigs(rules []*crdV1.RouteRule) (
 		var routeAction *api.RouteAction
 		// TODO: single cluster and weighted cluster can be handled together.
 		if len(spec.Route) == 1 {
-			labelSelectorDesc := c.parseLabelSelectors(spec.Route[0].Labels)
-			// Generate final cluster name.
-			clusterName := fmt.Sprintf("%s|%s|%s|%s", OutboundPrefix, serviceName, HttpTypePrefix, labelSelectorDesc)
+			clusterName, clusterSelectorPair := c.parseWeightSelectorPair(serviceName, spec.Route[0])
+			// Update cluster-selector table for cache.
+			selectors[clusterName] = clusterSelectorPair
 			// Generate route action. Cluster pattern is `single cluster`.
 			routeAction = &api.RouteAction{
 				ClusterPattern: &api.RouteAction_Cluster{Cluster: clusterName},
@@ -148,15 +162,7 @@ func (c *ConfigConverter) AggregateProxyRouteConfigs(rules []*crdV1.RouteRule) (
 		} else {
 			var clusterWeightPairs []*api.WeightedCluster_ClusterWeightPair
 			for _, weightSelectorPair := range spec.Route {
-				labelSelectorDesc := c.parseLabelSelectors(weightSelectorPair.Labels)
-				// Generate final cluster name.
-				clusterName := fmt.Sprintf("%s|%s|%s|%s", OutboundPrefix, serviceName, HttpTypePrefix, labelSelectorDesc)
-				clusterSelectorPair := ClusterSelectorPair{
-					clusterName: clusterName,
-					serviceName: serviceName,
-					weight: weightSelectorPair.Weight,
-					selectorMap: weightSelectorPair.Labels,
-				}
+				clusterName, clusterSelectorPair := c.parseWeightSelectorPair(serviceName, weightSelectorPair)
 				// Update cluster-selector table for cache.
 				selectors[clusterName] = clusterSelectorPair
 				// Update cluster weight pairs.

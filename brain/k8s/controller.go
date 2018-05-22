@@ -11,8 +11,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/util/workqueue"
-	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 type ControllerOptions struct {
@@ -62,7 +60,7 @@ type WrappedIndexInformer struct {
 
 type Controller struct {
 	client kubernetes.Interface
-	queue  workqueue.RateLimitingInterface
+	queue  *RateLimitingWorkingQueue
 
 	services  WrappedIndexInformer
 	endpoints WrappedIndexInformer
@@ -75,7 +73,7 @@ func NewController(client kubernetes.Interface, options ControllerOptions) *Cont
 
 	controller := &Controller{
 		client: client,
-		queue:  workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+		queue:  NewQueue(1 * time.Second),
 	}
 
 	controller.services = controller.createWrappedInformer(&v1.Service{}, options.ResyncPeriod,
@@ -113,36 +111,13 @@ func NewController(client kubernetes.Interface, options ControllerOptions) *Cont
 	return controller
 }
 
-func (c *Controller) runQueue() {
-	for c.handleQueueItem() {
-	}
-}
-
-func (c *Controller) handleQueueItem() bool {
-	obj, quit := c.queue.Get()
-	if quit {
-		return false
-	}
-
-	defer c.queue.Done(obj)
-
-	task := obj.(EventTask)
-	task.f(task.obj, task.key, task.event)
-
-	// TODO: handle error!
-
-	return true
-}
-
 func (c *Controller) Run(stopCh chan struct{}) {
-	defer c.queue.ShutDown()
-
 	go c.services.informer.Run(stopCh)
 	go c.endpoints.informer.Run(stopCh)
 	go c.pods.informer.Run(stopCh)
 	go c.nodes.informer.Run(stopCh)
 
-	go wait.Until(c.runQueue, time.Second, stopCh)
+	go c.queue.Run(stopCh)
 
 	<-stopCh
 	log.Println("Waffle: Kubernetes controller terminated")
@@ -159,21 +134,21 @@ func (c *Controller) createWrappedInformer(o runtime.Object, resyncPeriod time.D
 			AddFunc: func(obj interface{}) {
 				key, err := cache.MetaNamespaceKeyFunc(obj)
 				if err == nil {
-					c.queue.AddRateLimited(EventTask{obj: obj, key: key, event: Add, f: chain.Go})
+					c.queue.Push(EventTask{obj: obj, key: key, event: Add, f: chain.Go})
 				}
 			},
 			UpdateFunc: func(old, cur interface{}) {
 				if !reflect.DeepEqual(old, cur) {
 					key, err := cache.MetaNamespaceKeyFunc(cur)
 					if err == nil {
-						c.queue.AddRateLimited(EventTask{obj: cur, key: key, event: Update, f: chain.Go})
+						c.queue.Push(EventTask{obj: cur, key: key, event: Update, f: chain.Go})
 					}
 				}
 			},
 			DeleteFunc: func(obj interface{}) {
 				key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
 				if err == nil {
-					c.queue.AddRateLimited(EventTask{obj: obj, key: key, event: Delete, f: chain.Go})
+					c.queue.Push(EventTask{obj: obj, key: key, event: Delete, f: chain.Go})
 				}
 			},
 		})
@@ -204,7 +179,7 @@ func (c *Controller) GetPodCache() *PodCache {
 }
 
 func (c *Controller) GetServiceByName(serviceName string) (*v1.Service, bool) {
-	svc, exists, err := c.services.informer.GetStore().GetByKey(serviceName)
+	svc, exists, err := c.services.informer.GetStore().GetByKey("default/" + serviceName)
 	if err != nil {
 		return nil, false
 	}

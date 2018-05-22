@@ -30,22 +30,21 @@ func (updater *XdsResourceUpdater) fetchAndUpdate() error {
 	endpoints := updater.converter.BuildClusterEndpoints(selectors)
 
 	xdsCache.updateCache(clusters, endpoints, routeConfigs)
-	log.Println("========")
-	log.Println(routeConfigs)
-	log.Println("========")
-	log.Println("Xds cache updated")
 
 	return nil
 }
 
 func (updater *XdsResourceUpdater) Start(stop chan struct{}) error {
 	ticker := time.NewTicker(time.Second * 15)
-	select {
-	case <-stop:
-		log.Println("Stopping the xDS resource updater")
-		break
-	case <-ticker.C:
-		go updater.fetchAndUpdate()
+	for {
+		select {
+		case <-stop:
+			log.Println("Stopping the xDS resource updater")
+			break
+		case <-ticker.C:
+			go updater.fetchAndUpdate()
+		}
 	}
+
 	return nil
 }

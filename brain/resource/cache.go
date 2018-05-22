@@ -18,9 +18,7 @@ type XdsResourceRegistry struct {
 	ClusterEndpoints []*api.ClusterEndpoints
 	RouteRuleConfigs []*api.RouteConfig
 
-	// clusterSelectors map[string]ClusterSelectorPair
-
-	mutex *sync.Mutex
+	mutex sync.Mutex
 }
 
 func (registry *XdsResourceRegistry) updateCache(c []*api.Cluster, e []*api.ClusterEndpoints, r []*api.RouteConfig) {
@@ -32,4 +30,6 @@ func (registry *XdsResourceRegistry) updateCache(c []*api.Cluster, e []*api.Clus
 	registry.RouteRuleConfigs = r
 }
 
-var xdsCache = XdsResourceRegistry{}
+var xdsCache = XdsResourceRegistry{
+	mutex: sync.Mutex{},
+}

@@ -19,17 +19,20 @@ func (w *ResourceWatcher) StartWatching(stop chan struct{}) error {
 	}
 	ticker := time.NewTicker(time.Second * 25)
 	ctx := context.Background()
-	select {
-	case <-stop:
-		log.Println("Stopping the xDS watcher")
-		break
-	case <-ticker.C:
-		go func() {
-			err := w.XdsConsumer.RetrieveAndUpdate(ctx)
-			if err != nil {
-				log.Println("Error when retrieving xDS resources: " + err.Error())
-			}
-		}()
+	for {
+		select {
+		case <-stop:
+			log.Println("Stopping the xDS watcher")
+			break
+		case <-ticker.C:
+			go func() {
+				err := w.XdsConsumer.RetrieveAndUpdate(ctx)
+				if err != nil {
+					log.Println("Error when retrieving xDS resources: " + err.Error())
+				}
+			}()
+		}
 	}
+
 	return nil
 }

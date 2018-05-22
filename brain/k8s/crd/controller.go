@@ -11,6 +11,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/rest"
+	"k8s.io/apimachinery/pkg/util/runtime"
 )
 
 type RouteRuleController struct {
@@ -50,6 +51,7 @@ func NewRouteRuleController(options k8s.ControllerOptions) (*RouteRuleController
 }
 
 func (c *RouteRuleController) Run(stopCh chan struct{}) {
+	defer runtime.HandleCrash()
 	defer c.queue.ShutDown()
 
 	go c.informer.Run(stopCh)
