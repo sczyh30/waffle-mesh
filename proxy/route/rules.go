@@ -5,6 +5,8 @@ import (
 
 	"github.com/sczyh30/waffle-mesh/api/gen"
 	"reflect"
+	"encoding/json"
+	"log"
 )
 
 type RouteTable map[string]*api.RouteConfig
@@ -22,34 +24,49 @@ func getRouteAction(routeName string, action *api.RouteAction) *RouteActionWrapp
 		}
 	}
 	// No match, new create.
-	out := FromAction(action)
+	out := fromAction(action)
 	ac = append(ac, out)
 	return out
 }
 
-func AddRouteRule(rule *api.RouteConfig) {
+func addRouteRule(rule *api.RouteConfig) {
 	routeTable[rule.Name] = rule
 	var ac []*RouteActionWrapper
 	for _, entry := range rule.Routes {
-		action := FromAction(entry.GetRoute())
+		action := fromAction(entry.GetRoute())
 		ac = append(ac, action)
 	}
 	routeActionCache[rule.Name] = ac
 }
 
-func UpdateRouteRule(newConfig *api.RouteConfig) {
-	if _, exists := routeTable[newConfig.Name]; !exists {
+func updateRouteRule(newConfig *api.RouteConfig) {
+	if oldConfig, exists := routeTable[newConfig.Name]; !exists {
 		// Add the new route rule.
-		AddRouteRule(newConfig)
+		addRouteRule(newConfig)
 	} else {
-		routeTable[newConfig.Name] = newConfig
-		// TODO Check if changes made.
+		if !reflect.DeepEqual(newConfig, oldConfig) {
+			data, _ := json.Marshal(oldConfig)
+			log.Printf("Rule to update (old): %s\n", data)
+			data, _ = json.Marshal(newConfig)
+			log.Printf("Rule to update (new): %s\n", data)
+
+			routeTable[newConfig.Name] = newConfig
+			// TODO Check if changes made.
+		}
 	}
 }
 
-func RemoveRouteRule(name string) {
+func removeRouteRule(name string) {
 	delete(routeTable, name)
 	delete(routeActionCache, name)
+}
+
+func GetRoutes() []*api.RouteConfig {
+	routes := make([]*api.RouteConfig, 0)
+	for _, v := range routeTable {
+		routes = append(routes, v)
+	}
+	return routes
 }
 
 func DoUpdate(routes []*api.RouteConfig) {
@@ -60,12 +77,12 @@ func DoUpdate(routes []*api.RouteConfig) {
 	// GC deprecated rules
 	for _, v := range routeTable {
 		if _, exists := maps[v.Name]; !exists {
-			RemoveRouteRule(v.Name)
+			removeRouteRule(v.Name)
 		}
 	}
 	// Update new rules.
 	for _, newConfig := range routes {
-		UpdateRouteRule(newConfig)
+		updateRouteRule(newConfig)
 	}
 }
 
@@ -87,7 +104,7 @@ type RouteActionWrapper struct {
 	clusterPicker ClusterPicker
 }
 
-func FromAction(action *api.RouteAction) *RouteActionWrapper {
+func fromAction(action *api.RouteAction) *RouteActionWrapper {
 	if action.GetCluster() != "" {
 		return &RouteActionWrapper{
 			Action: action,

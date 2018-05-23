@@ -62,12 +62,19 @@ func (s *ProxyServer) StartProxy(stop chan struct{}) error {
 			return err
 		}
 	}
+	log.Println("Waffle Proxy server started")
 
 	return nil
 }
 
 func (s *ProxyServer) initMetricsServer(args *ProxyArgs) error {
-	// TODO
+	ms := metrics.NewMetricsServer(args.MetricsPort)
+	s.metricsServer = &ms
+
+	s.AddStartHandler(func(stop chan struct{}) error {
+		go ms.Start(stop)
+		return nil
+	})
 	return nil
 }
 
@@ -91,15 +98,18 @@ func (s *ProxyServer) initDiscoveryWatcher(args *ProxyArgs) error {
 }
 
 func (s *ProxyServer) initListener(args *ProxyArgs) error {
-	listener := network.NewListener(network.HTTP2, config.ServerConfig{
+	/*listener := network.NewListener(network.HTTP2, config.ServerConfig{
 		Host: "localhost",
 		Port: 8080,
 		TlsConfig: config.TlsConfig{
 			CertFilePath: "/Users/sczyh30/dev/go-projects/src/github.com/sczyh30/waffle-mesh/cert/cert.pem",
 			KeyFilePath:  "/Users/sczyh30/dev/go-projects/src/github.com/sczyh30/waffle-mesh/cert/key.pem",
 		},
+	})*/
+	listener := network.NewListener(network.HTTP1_1, config.ServerConfig{
+		Host: "localhost",
+		Port: 8080,
 	})
-
 	s.listener = &listener
 
 	// Configure handlers.

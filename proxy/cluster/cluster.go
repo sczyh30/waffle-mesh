@@ -7,6 +7,8 @@ import (
 	"github.com/sczyh30/waffle-mesh/api/gen"
 	"golang.org/x/time/rate"
 	"github.com/sczyh30/waffle-mesh/proxy/network/core"
+	"encoding/json"
+	"log"
 )
 
 type ClientPool map[hostAddress]*http.Client
@@ -39,6 +41,17 @@ func (c *ClusterEntry) Name() string {
 func (c *ClusterEntry) doUpdate(newConfig *api.Cluster, newEndpoints *api.ClusterEndpoints) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+
+	log.Println("==================")
+	data, _ := json.Marshal(c.config)
+	log.Printf("Old config: %v\n", string(data))
+	data, _ = json.Marshal(c.endpoints)
+	log.Printf("Old endpoints: %v\n", string(data))
+	data, _ = json.Marshal(newConfig)
+	log.Printf("New config: %v\n", string(data))
+	data, _ = json.Marshal(newEndpoints)
+	log.Printf("New endpoints: %v\n", string(data))
+	log.Println("==================")
 
 	// Update LB.
 	oldConfig := c.config

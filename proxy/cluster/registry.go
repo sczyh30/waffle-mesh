@@ -4,6 +4,9 @@ import (
 	"github.com/sczyh30/waffle-mesh/api/gen"
 	"github.com/sczyh30/waffle-mesh/proxy/network/core"
 	"golang.org/x/time/rate"
+	"reflect"
+	"encoding/json"
+	"log"
 )
 
 type ClusterRegistry struct {
@@ -19,6 +22,22 @@ func GetCluster(name string) (*ClusterEntry, bool) {
 	return e, exists
 }
 
+func GetClusters() []*api.Cluster {
+	result := make([]*api.Cluster, 0)
+	for _, v := range runtimeClusterRegistry.registryMap {
+		result = append(result, v.config)
+	}
+	return result
+}
+
+func GetClusterEndpoints() []*api.ClusterEndpoints {
+	result := make([]*api.ClusterEndpoints, 0)
+	for _, v := range runtimeClusterRegistry.registryMap {
+		result = append(result, v.endpoints)
+	}
+	return result
+}
+
 func removeCluster(name string) *ClusterEntry {
 	c := runtimeClusterRegistry.registryMap[name]
 	delete(runtimeClusterRegistry.registryMap, name)
@@ -26,6 +45,9 @@ func removeCluster(name string) *ClusterEntry {
 }
 
 func addClusterEntry(name string, cluster *ClusterEntry) {
+	data, _ := json.Marshal(cluster.config)
+	log.Printf("New added cluster: %s\n", string(data))
+
 	runtimeClusterRegistry.registryMap[name] = cluster
 }
 
@@ -56,7 +78,9 @@ func DoUpdate(clusters []*api.Cluster, endpoints []*api.ClusterEndpoints) {
 }
 
 func updateOldClusterInternal(oldEntry *ClusterEntry, clusterConfig *api.Cluster, endpoints *api.ClusterEndpoints) {
-	oldEntry.doUpdate(clusterConfig, endpoints)
+	if !reflect.DeepEqual(clusterConfig, oldEntry.config) || !reflect.DeepEqual(endpoints, oldEntry.endpoints) {
+		oldEntry.doUpdate(clusterConfig, endpoints)
+	}
 }
 
 func addNewClusterInternal(cluster *api.Cluster, endpoints *api.ClusterEndpoints) {
