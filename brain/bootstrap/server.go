@@ -102,15 +102,9 @@ func (s *BrainServer) initKubernetesController(args *BrainArgs) error {
 func (s *BrainServer) initDiscoveryProvider(args *BrainArgs) error {
 	provider := &discovery.DiscoveryProvider{
 		Port: args.XdsProviderPort,
-		Cds: &discovery.ClusterDiscoveryServiceImpl{
-			Controller: s.k8sController,
-		},
-		Eds: &discovery.EndpointDiscoveryServiceImpl{
-			Controller: s.k8sController,
-		},
-		Rds: &discovery.RouteDiscoveryServiceImpl{
-			Controller: s.k8sRouteRuleController,
-		},
+		Cds: &discovery.ClusterDiscoveryServiceImpl{},
+		Eds: &discovery.EndpointDiscoveryServiceImpl{},
+		Rds: &discovery.RouteDiscoveryServiceImpl{},
 	}
 	s.discoveryProvider = provider
 

@@ -3,15 +3,14 @@ package discovery
 import (
 	"github.com/sczyh30/waffle-mesh/api/gen"
 	"golang.org/x/net/context"
-	"github.com/sczyh30/waffle-mesh/brain/k8s"
+	"github.com/sczyh30/waffle-mesh/brain/resource"
 )
 
 type ClusterDiscoveryServiceImpl struct {
-	Controller *k8s.Controller
 }
 
 func (s *ClusterDiscoveryServiceImpl) RetrieveClusters(c context.Context, req *api.DiscoveryRequest) (*api.ClusterDiscoveryResponse, error) {
 	return &api.ClusterDiscoveryResponse{
-
+		Clusters: resource.XdsCache.ClusterConfigs,
 	}, nil
 }

@@ -19,7 +19,7 @@ limitations under the License.
 package fake
 
 import (
-	v1 "github.com/sczyh30/waffle-mesh/brain/k8s/gen/clientset/versioned/typed/crd/v1"
+	v1 "github.com/sczyh30/waffle-mesh/brain/k8s/crd/gen/clientset/versioned/typed/crd/v1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )

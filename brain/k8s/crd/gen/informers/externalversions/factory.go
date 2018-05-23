@@ -23,9 +23,9 @@ import (
 	sync "sync"
 	time "time"
 
-	versioned "github.com/sczyh30/waffle-mesh/brain/k8s/gen/clientset/versioned"
-	crd "github.com/sczyh30/waffle-mesh/brain/k8s/gen/informers/externalversions/crd"
-	internalinterfaces "github.com/sczyh30/waffle-mesh/brain/k8s/gen/informers/externalversions/internalinterfaces"
+	versioned "github.com/sczyh30/waffle-mesh/brain/k8s/crd/gen/clientset/versioned"
+	crd "github.com/sczyh30/waffle-mesh/brain/k8s/crd/gen/informers/externalversions/crd"
+	internalinterfaces "github.com/sczyh30/waffle-mesh/brain/k8s/crd/gen/informers/externalversions/internalinterfaces"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

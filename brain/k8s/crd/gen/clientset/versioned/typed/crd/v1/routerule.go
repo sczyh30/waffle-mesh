@@ -19,8 +19,8 @@ limitations under the License.
 package v1
 
 import (
+	scheme "github.com/sczyh30/waffle-mesh/brain/k8s/crd/gen/clientset/versioned/scheme"
 	v1 "github.com/sczyh30/waffle-mesh/brain/k8s/crd/v1"
-	scheme "github.com/sczyh30/waffle-mesh/brain/k8s/gen/clientset/versioned/scheme"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"

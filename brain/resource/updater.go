@@ -1,6 +1,7 @@
 package resource
 
 import (
+	"encoding/json"
 	"log"
 	"time"
 
@@ -29,7 +30,12 @@ func (updater *XdsResourceUpdater) fetchAndUpdate() error {
 	clusters := updater.converter.BuildOutboundClusters(routeConfigs, selectors)
 	endpoints := updater.converter.BuildClusterEndpoints(selectors)
 
-	xdsCache.updateCache(clusters, endpoints, routeConfigs)
+	XdsCache.updateCache(clusters, endpoints, routeConfigs)
+
+	data, _ := json.Marshal(endpoints)
+	log.Println("Xds endpoints updated: " + string(data))
+	data, _ = json.Marshal(routeConfigs)
+	log.Println("Xds route configs updated: " + string(data))
 
 	return nil
 }

@@ -30,6 +30,6 @@ func (registry *XdsResourceRegistry) updateCache(c []*api.Cluster, e []*api.Clus
 	registry.RouteRuleConfigs = r
 }
 
-var xdsCache = XdsResourceRegistry{
+var XdsCache = XdsResourceRegistry{
 	mutex: sync.Mutex{},
 }

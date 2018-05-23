@@ -21,10 +21,10 @@ package v1
 import (
 	time "time"
 
+	versioned "github.com/sczyh30/waffle-mesh/brain/k8s/crd/gen/clientset/versioned"
+	internalinterfaces "github.com/sczyh30/waffle-mesh/brain/k8s/crd/gen/informers/externalversions/internalinterfaces"
+	v1 "github.com/sczyh30/waffle-mesh/brain/k8s/crd/gen/listers/crd/v1"
 	crd_v1 "github.com/sczyh30/waffle-mesh/brain/k8s/crd/v1"
-	versioned "github.com/sczyh30/waffle-mesh/brain/k8s/gen/clientset/versioned"
-	internalinterfaces "github.com/sczyh30/waffle-mesh/brain/k8s/gen/informers/externalversions/internalinterfaces"
-	v1 "github.com/sczyh30/waffle-mesh/brain/k8s/gen/listers/crd/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"

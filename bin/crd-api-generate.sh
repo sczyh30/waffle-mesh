@@ -7,5 +7,5 @@ set -o pipefail
 CODEGEN_PKG=./vendor/k8s.io/code-generator
 
 ${CODEGEN_PKG}/generate-groups.sh all \
-  github.com/sczyh30/waffle-mesh/brain/k8s/gen github.com/sczyh30/waffle-mesh/brain/k8s \
+  github.com/sczyh30/waffle-mesh/brain/k8s/crd/gen github.com/sczyh30/waffle-mesh/brain/k8s \
   crd:v1

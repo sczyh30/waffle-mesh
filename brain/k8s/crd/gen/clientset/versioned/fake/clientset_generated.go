@@ -19,9 +19,9 @@ limitations under the License.
 package fake
 
 import (
-	clientset "github.com/sczyh30/waffle-mesh/brain/k8s/gen/clientset/versioned"
-	configv1 "github.com/sczyh30/waffle-mesh/brain/k8s/gen/clientset/versioned/typed/crd/v1"
-	fakeconfigv1 "github.com/sczyh30/waffle-mesh/brain/k8s/gen/clientset/versioned/typed/crd/v1/fake"
+	clientset "github.com/sczyh30/waffle-mesh/brain/k8s/crd/gen/clientset/versioned"
+	configv1 "github.com/sczyh30/waffle-mesh/brain/k8s/crd/gen/clientset/versioned/typed/crd/v1"
+	fakeconfigv1 "github.com/sczyh30/waffle-mesh/brain/k8s/crd/gen/clientset/versioned/typed/crd/v1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"

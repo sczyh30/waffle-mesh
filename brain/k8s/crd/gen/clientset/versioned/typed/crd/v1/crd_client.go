@@ -19,8 +19,8 @@ limitations under the License.
 package v1
 
 import (
+	"github.com/sczyh30/waffle-mesh/brain/k8s/crd/gen/clientset/versioned/scheme"
 	v1 "github.com/sczyh30/waffle-mesh/brain/k8s/crd/v1"
-	"github.com/sczyh30/waffle-mesh/brain/k8s/gen/clientset/versioned/scheme"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"
 )
