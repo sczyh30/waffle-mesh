@@ -103,7 +103,7 @@ func (s *ProxyServer) initListener(args *ProxyArgs) error {
 	s.listener = &listener
 
 	// Configure handlers.
-	listener.AddHandler(&route.Router{})
+	listener.AddHandler(route.NewRouter())
 
 	s.AddStartHandler(func(stop chan struct{}) error {
 		go listener.BindAndListen()

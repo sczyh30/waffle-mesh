@@ -11,38 +11,44 @@ import (
 )
 
 const (
-	CONTINUE = true
-	STOP = false
+	Continue  = true
+	StopChain = false
 )
 
 type Router struct {
+	matcher *Matcher
+}
 
+func NewRouter() *Router {
+	return &Router{
+		matcher: &Matcher{},
+	}
 }
 
 func (r *Router) HandleRequest(writer http.ResponseWriter, request *http.Request) bool {
 	host := request.Host
 
-	routes, err := FindMatchingRoutes(host)
+	routes, namespace, err := findMatchingRoutes(host)
 	if err != nil {
 		r.handleError(writer, err, http.StatusNotFound)
-		return STOP
+		return StopChain
 	}
 
-	routeAction, err := r.findFirstMatchingRouteAction(routes, request)
+	routeAction, err := r.findFirstMatchingRouteAction(namespace, routes, request)
 	if err != nil {
 		r.handleError(writer, err, http.StatusNotFound)
-		return STOP
+		return StopChain
 	}
 
 	r.executeRouteAction(routeAction, writer, request)
 
-	return STOP
+	return StopChain
 }
 
 func (r *Router) executeRouteAction(action *RouteActionWrapper, w http.ResponseWriter, request *http.Request) {
 	clusterName := action.clusterPicker.NextCluster()
-	targetCluster := cluster.GetCluster(clusterName)
-	if targetCluster == nil {
+	targetCluster, exists := cluster.GetCluster(clusterName)
+	if !exists {
 		r.handleError(w, errors.New("no matching cluster"), http.StatusNotFound)
 		return
 	}
@@ -80,7 +86,7 @@ func (r *Router) handleError(w http.ResponseWriter, err error, status int) {
 	fmt.Fprint(w, err.Error())
 }
 
-func (r *Router) findFirstMatchingRouteAction(routes []*api.RouteEntry, request *http.Request) (*RouteActionWrapper, error) {
+func (r *Router) findFirstMatchingRouteAction(routeNamespace string, routes []*api.RouteEntry, request *http.Request) (*RouteActionWrapper, error) {
 	path := request.URL.Path
 
 	for _, curRoute := range routes {
@@ -89,14 +95,7 @@ func (r *Router) findFirstMatchingRouteAction(routes []*api.RouteEntry, request 
 			headerMatches := curRoute.Match.Headers
 			// Then match the header pattern.
 			if headerMatches == nil || r.matchHeaderPattern(headerMatches, request.Header) {
-				if action, ok := curRoute.Action.(*RouteActionWrapper); ok {
-					return action, nil
-				} else {
-					// Directly convert (CHECK HERE!)
-					action := FromAction(curRoute.GetRoute())
-					curRoute.Action = action
-					return action, nil
-				}
+				return getRouteAction(routeNamespace, curRoute.GetRoute()), nil
 			}
 		}
 	}
@@ -104,13 +103,13 @@ func (r *Router) findFirstMatchingRouteAction(routes []*api.RouteEntry, request 
 }
 
 func (r *Router) matchPathPattern(curRoute *api.RouteEntry, path string) bool {
-	return matchExactPath(curRoute, path) || matchPrefixPath(curRoute, path) || matchRegexPath(curRoute, path)
+	return r.matcher.matchExactPath(curRoute, path) || r.matcher.matchPrefixPath(curRoute, path) || r.matcher.matchRegexPath(curRoute, path)
 }
 
 func (r *Router) matchHeaderPattern(headerMatches []*api.HeaderMatch, header http.Header) bool {
 	for _, m := range headerMatches {
 		v := header.Get(m.Name)
-		if v == "" || !(matchExactHeader(m, v) || matchRegexHeader(m, v)) {
+		if v == "" || !(r.matcher.matchExactHeader(m, v) || r.matcher.matchRegexHeader(m, v)) {
 			return false
 		}
 	}

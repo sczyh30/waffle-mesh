@@ -1,6 +1,10 @@
 package route
 
-import "github.com/sczyh30/waffle-mesh/api/gen"
+import (
+	"sync"
+
+	"github.com/sczyh30/waffle-mesh/api/gen"
+)
 
 type ClusterPicker interface {
 	NextCluster() string
@@ -15,6 +19,8 @@ type ClusterWeightPair struct {
 
 type SmoothWeightedClusterPicker struct {
 	weightedPairs []*ClusterWeightPair
+
+	mutex sync.Mutex
 }
 
 func NewSmoothWeightedClusterPicker(wc *api.WeightedCluster) *SmoothWeightedClusterPicker {
@@ -29,10 +35,14 @@ func NewSmoothWeightedClusterPicker(wc *api.WeightedCluster) *SmoothWeightedClus
 	}
 	return &SmoothWeightedClusterPicker{
 		weightedPairs: wp,
+		mutex: sync.Mutex{},
 	}
 }
 
 func (p *SmoothWeightedClusterPicker) NextCluster() string {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+
 	// A smooth load balancing algorithm for weighted round-robin.
 	var total uint32 = 0
 	for _, pair := range p.weightedPairs {

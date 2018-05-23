@@ -1,7 +1,10 @@
 package cluster
 
-import "github.com/sczyh30/waffle-mesh/api/gen"
+import (
+	"github.com/sczyh30/waffle-mesh/api/gen"
+)
 
+// Not thread-safe.
 type LoadBalancer interface {
 	PickHost(m *LbMetadata) (*api.HttpAddress, error)
 }
