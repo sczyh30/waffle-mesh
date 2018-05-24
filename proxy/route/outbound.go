@@ -1,12 +1,14 @@
 package route
 
 import (
-	"net/http"
-	"github.com/sczyh30/waffle-mesh/proxy/cluster"
 	"errors"
 	"fmt"
 	"io"
+	"log"
+	"net/http"
+
 	"github.com/sczyh30/waffle-mesh/api/gen"
+	"github.com/sczyh30/waffle-mesh/proxy/cluster"
 )
 
 type OutboundRouter struct {
@@ -53,9 +55,8 @@ func (r *OutboundRouter) executeRouteAction(action *RouteActionWrapper, w http.R
 		return
 	}
 
-	fmt.Fprintf(w, "Cluster name: %s\n", targetCluster.Name())
-	fmt.Fprintf(w, "Picked endpoint: %s:%d\n", address.Host, address.Port)
-	fmt.Fprintln(w)
+	log.Printf("Cluster name: %s\n", targetCluster.Name())
+	log.Printf("Picked endpoint: %s:%d\n", address.Host, address.Port)
 
 	targetUrl := "https://" + address.Host + ":" + fmt.Sprint(address.Port) + request.RequestURI
 	newRequest, err := http.NewRequest(request.Method, targetUrl, request.Body)
@@ -64,7 +65,7 @@ func (r *OutboundRouter) executeRouteAction(action *RouteActionWrapper, w http.R
 	newRequest.Header = h
 	response, err := client.Do(newRequest)
 	if err != nil {
-		w.WriteHeader(503)
+		w.WriteHeader(http.StatusServiceUnavailable)
 		fmt.Fprint(w, "service unavailable: " + err.Error())
 		return
 	}
@@ -93,8 +94,12 @@ func (r *OutboundRouter) findFirstMatchingRouteAction(routeNamespace string, rou
 	path := request.URL.Path
 
 	for _, curRoute := range routes {
+		// Empty match can work.
+		if curRoute.Match == nil {
+			return getRouteAction(routeNamespace, curRoute.GetRoute()), nil
+		}
 		// First match the path pattern.
-		if r.matchPathPattern(curRoute, path) {
+		if curRoute.Match.PathPattern == nil || r.matchPathPattern(curRoute, path) {
 			headerMatches := curRoute.Match.Headers
 			// Then match the header pattern.
 			if headerMatches == nil || r.matchHeaderPattern(headerMatches, request.Header) {
@@ -106,7 +111,8 @@ func (r *OutboundRouter) findFirstMatchingRouteAction(routeNamespace string, rou
 }
 
 func (r *OutboundRouter) matchPathPattern(curRoute *api.RouteEntry, path string) bool {
-	return r.matcher.matchExactPath(curRoute, path) || r.matcher.matchPrefixPath(curRoute, path) || r.matcher.matchRegexPath(curRoute, path)
+	return r.matcher.matchExactPath(curRoute, path) ||
+		r.matcher.matchPrefixPath(curRoute, path) || r.matcher.matchRegexPath(curRoute, path)
 }
 
 func (r *OutboundRouter) matchHeaderPattern(headerMatches []*api.HeaderMatch, header http.Header) bool {

@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 	"flag"
+	"log"
 	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/sczyh30/waffle-mesh/pkg/cmd"
 	"github.com/sczyh30/waffle-mesh/brain/bootstrap"
-	"log"
 )
 
 var brainArgs bootstrap.BrainArgs

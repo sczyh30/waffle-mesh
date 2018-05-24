@@ -1,12 +1,12 @@
 package route
 
 import (
+	"encoding/json"
 	"errors"
+	"log"
+	"reflect"
 
 	"github.com/sczyh30/waffle-mesh/api/gen"
-	"reflect"
-	"encoding/json"
-	"log"
 )
 
 type RouteTable map[string]*api.RouteConfig

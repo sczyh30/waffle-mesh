@@ -3,6 +3,7 @@ package route
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -11,11 +12,11 @@ import (
 )
 
 type InboundRouter struct {
-
+	inboundPort uint32
 }
 
-func NewInboundRouter() *InboundRouter {
-	return &InboundRouter{}
+func NewInboundRouter(port uint32) *InboundRouter {
+	return &InboundRouter{inboundPort: port}
 }
 
 func (r *InboundRouter) HandleRequest(writer http.ResponseWriter, request *http.Request) bool {
@@ -28,8 +29,15 @@ func (r *InboundRouter) HandleRequest(writer http.ResponseWriter, request *http.
 		port, _ = strconv.Atoi(h[1])
 	}
 
+	if port == int(r.inboundPort) {
+		writer.WriteHeader(503)
+		fmt.Fprintf(writer, "Invalid target port: %d\n", r.inboundPort)
+		return StopChain
+	}
+
 	client := core.NewHttpClient()
 	targetUrl := "http://localhost:" + fmt.Sprint(port) + request.RequestURI
+	log.Printf("[Inbound Server] Will redirect to: %s\n", targetUrl)
 	newRequest, _ := http.NewRequest(request.Method, targetUrl, request.Body)
 
 	newRequest.Header = request.Header

@@ -54,7 +54,8 @@ func (l *listenerImpl) BindAndListen() error {
 	case HTTP1_1:
 		err = l.server.ListenAndServe()
 	case HTTP2:
-		err = l.server.ListenAndServeTLS(l.config.TlsConfig.CertFilePath, l.config.TlsConfig.KeyFilePath)
+		err = l.server.ListenAndServe()
+		//err = l.server.ListenAndServeTLS(l.config.TlsConfig.CertFilePath, l.config.TlsConfig.KeyFilePath)
 	}
 	if err != nil {
 		log.Fatal("error when listening to port " + strconv.Itoa(l.config.Port), err)

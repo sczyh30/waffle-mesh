@@ -11,10 +11,10 @@ var publicHttp2Tr = &http2.Transport{
 }
 
 func NewHttp2Client() *http.Client {
-	tr := publicHttp2Tr
+	//tr := publicHttp2Tr
 
 	httpClient := new(http.Client)
-	httpClient.Transport = tr
+	//httpClient.Transport = tr
 	return httpClient
 }
 

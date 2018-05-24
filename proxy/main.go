@@ -3,12 +3,13 @@ package main
 import (
 	"fmt"
 	"flag"
+	"log"
 	"os"
 
 	"github.com/spf13/cobra"
+
 	"github.com/sczyh30/waffle-mesh/pkg/cmd"
 	"github.com/sczyh30/waffle-mesh/proxy/server"
-	"log"
 )
 
 var proxyArgs server.ProxyArgs
