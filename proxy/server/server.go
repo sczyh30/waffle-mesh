@@ -11,26 +11,30 @@ import (
 	"github.com/sczyh30/waffle-mesh/proxy/route"
 )
 
-const(
-	DefaultBrainServerHost = "waffle-brain"
-	DefaultGrpcPort = 24242
-	DefaultListenerPort = 9080
-	DefaultMetricsPort = 19802
+const (
+	DefaultBrainServerHost      = "waffle-brain"
+	DefaultGrpcPort             = 24242
+	DefaultInboundListenerPort  = 9081
+	DefaultOutboundListenerPort = 9080
+	DefaultMetricsPort          = 19802
 )
 
 type ProxyArgs struct {
-	BrainServerHost string
-	GrpcPort uint32
-	ListenerPort uint32
-	MetricsPort uint32
+	BrainServerHost      string
+	BrainGrpcPort        uint32
+	InboundListenerPort  uint32
+	OutboundListenerPort uint32
+	MetricsPort          uint32
 }
 
 type startHandler func(chan struct{}) error
 
 type ProxyServer struct {
 	metricsServer *metrics.MonitorServer
-	xdsWatcher *discovery.ResourceWatcher
-	listener *network.Listener
+	xdsWatcher    *discovery.ResourceWatcher
+
+	inboundListener  *network.Listener
+	outboundListener *network.Listener
 
 	startHandlerChain []startHandler
 }
@@ -79,7 +83,7 @@ func (s *ProxyServer) initMetricsServer(args *ProxyArgs) error {
 }
 
 func (s *ProxyServer) initDiscoveryWatcher(args *ProxyArgs) error {
-	address := args.BrainServerHost + ":" + fmt.Sprint(args.GrpcPort)
+	address := args.BrainServerHost + ":" + fmt.Sprint(args.BrainGrpcPort)
 	consumer, err := discovery.NewXdsConsumer(address)
 	if err != nil {
 		return err
@@ -98,25 +102,29 @@ func (s *ProxyServer) initDiscoveryWatcher(args *ProxyArgs) error {
 }
 
 func (s *ProxyServer) initListener(args *ProxyArgs) error {
-	/*listener := network.NewListener(network.HTTP2, config.ServerConfig{
+	// Init inbound listener (outside services -> Waffle proxy)
+	inboundListener := network.NewListener(network.HTTP1_1, config.ServerConfig{
 		Host: "localhost",
-		Port: 8080,
-		TlsConfig: config.TlsConfig{
-			CertFilePath: "/Users/sczyh30/dev/go-projects/src/github.com/sczyh30/waffle-mesh/cert/cert.pem",
-			KeyFilePath:  "/Users/sczyh30/dev/go-projects/src/github.com/sczyh30/waffle-mesh/cert/key.pem",
-		},
-	})*/
-	listener := network.NewListener(network.HTTP1_1, config.ServerConfig{
-		Host: "localhost",
-		Port: 8080,
+		Port: int(args.InboundListenerPort),
 	})
-	s.listener = &listener
+	inboundListener.AddHandler(route.NewInboundRouter())
+	s.inboundListener = &inboundListener
 
-	// Configure handlers.
-	listener.AddHandler(route.NewRouter())
+	// Init outbound listener (local service -> Waffle proxy)
+	outboundListener := network.NewListener(network.HTTP2, config.ServerConfig{
+		Host: "localhost",
+		Port: int(args.OutboundListenerPort),
+		TlsConfig: config.TlsConfig{
+			CertFilePath: "cert/cert.pem",
+			KeyFilePath:  "cert/key.pem",
+		},
+	})
+	outboundListener.AddHandler(route.NewOutboundRouter())
+	s.outboundListener = &outboundListener
 
 	s.AddStartHandler(func(stop chan struct{}) error {
-		go listener.BindAndListen()
+		go inboundListener.BindAndListen()
+		go outboundListener.BindAndListen()
 
 		return nil
 	})

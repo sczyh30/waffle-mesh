@@ -46,12 +46,14 @@ func main() {
 func init() {
 	command.PersistentFlags().StringVar(&proxyArgs.BrainServerHost, "brainServerHost",
 		server.DefaultBrainServerHost, "Host name of Waffle Brain Server")
-	command.PersistentFlags().Uint32Var(&proxyArgs.GrpcPort, "xdsPort",
+	command.PersistentFlags().Uint32Var(&proxyArgs.BrainGrpcPort, "xdsPort",
 		server.DefaultGrpcPort, "Port of discovery service server (gRPC)")
 	command.PersistentFlags().Uint32Var(&proxyArgs.MetricsPort, "metricsPort",
 		server.DefaultMetricsPort, "Port of metrics server")
-	command.PersistentFlags().Uint32Var(&proxyArgs.ListenerPort, "listenerPort",
-		server.DefaultListenerPort, "Port of listener")
+	command.PersistentFlags().Uint32VarP(&proxyArgs.InboundListenerPort, "inboundPort", "i",
+		server.DefaultInboundListenerPort, "Port of inbound listener (local services to proxy)")
+	command.PersistentFlags().Uint32VarP(&proxyArgs.OutboundListenerPort, "outboundPort", "o",
+		server.DefaultOutboundListenerPort, "Port of outbound listener (outside services to proxy)")
 
 	flag.CommandLine.VisitAll(func(gf *flag.Flag) {
 		command.PersistentFlags().AddGoFlag(gf)

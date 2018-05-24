@@ -17,3 +17,8 @@ func NewHttp2Client() *http.Client {
 	httpClient.Transport = tr
 	return httpClient
 }
+
+func NewHttpClient() *http.Client {
+	httpClient := new(http.Client)
+	return httpClient
+}

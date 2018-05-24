@@ -1,31 +1,25 @@
 package route
 
 import (
+	"net/http"
+	"github.com/sczyh30/waffle-mesh/proxy/cluster"
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
-
 	"github.com/sczyh30/waffle-mesh/api/gen"
-	"github.com/sczyh30/waffle-mesh/proxy/cluster"
 )
 
-const (
-	Continue  = true
-	StopChain = false
-)
-
-type Router struct {
+type OutboundRouter struct {
 	matcher *Matcher
 }
 
-func NewRouter() *Router {
-	return &Router{
+func NewOutboundRouter() *OutboundRouter {
+	return &OutboundRouter{
 		matcher: &Matcher{},
 	}
 }
 
-func (r *Router) HandleRequest(writer http.ResponseWriter, request *http.Request) bool {
+func (r *OutboundRouter) HandleRequest(writer http.ResponseWriter, request *http.Request) bool {
 	host := request.Host
 
 	routes, namespace, err := findMatchingRoutes(host)
@@ -45,7 +39,7 @@ func (r *Router) HandleRequest(writer http.ResponseWriter, request *http.Request
 	return StopChain
 }
 
-func (r *Router) executeRouteAction(action *RouteActionWrapper, w http.ResponseWriter, request *http.Request) {
+func (r *OutboundRouter) executeRouteAction(action *RouteActionWrapper, w http.ResponseWriter, request *http.Request) {
 	clusterName := action.clusterPicker.NextCluster()
 	targetCluster, exists := cluster.GetCluster(clusterName)
 	if !exists {
@@ -75,20 +69,27 @@ func (r *Router) executeRouteAction(action *RouteActionWrapper, w http.ResponseW
 		return
 	}
 
+	// Write headers.
+	for k, header := range response.Header {
+		for _, v := range header {
+			w.Header().Add(k, v)
+		}
+	}
 	w.WriteHeader(response.StatusCode)
+	// Write response body.
 	io.Copy(w, response.Body)
 }
 
-func (r *Router) lbMetadata(request *http.Request) *cluster.LbMetadata {
+func (r *OutboundRouter) lbMetadata(request *http.Request) *cluster.LbMetadata {
 	return &cluster.LbMetadata{}
 }
 
-func (r *Router) handleError(w http.ResponseWriter, err error, status int) {
+func (r *OutboundRouter) handleError(w http.ResponseWriter, err error, status int) {
 	w.WriteHeader(status)
 	fmt.Fprint(w, err.Error())
 }
 
-func (r *Router) findFirstMatchingRouteAction(routeNamespace string, routes []*api.RouteEntry, request *http.Request) (*RouteActionWrapper, error) {
+func (r *OutboundRouter) findFirstMatchingRouteAction(routeNamespace string, routes []*api.RouteEntry, request *http.Request) (*RouteActionWrapper, error) {
 	path := request.URL.Path
 
 	for _, curRoute := range routes {
@@ -104,11 +105,11 @@ func (r *Router) findFirstMatchingRouteAction(routeNamespace string, routes []*a
 	return nil, errors.New("no matching routes")
 }
 
-func (r *Router) matchPathPattern(curRoute *api.RouteEntry, path string) bool {
+func (r *OutboundRouter) matchPathPattern(curRoute *api.RouteEntry, path string) bool {
 	return r.matcher.matchExactPath(curRoute, path) || r.matcher.matchPrefixPath(curRoute, path) || r.matcher.matchRegexPath(curRoute, path)
 }
 
-func (r *Router) matchHeaderPattern(headerMatches []*api.HeaderMatch, header http.Header) bool {
+func (r *OutboundRouter) matchHeaderPattern(headerMatches []*api.HeaderMatch, header http.Header) bool {
 	for _, m := range headerMatches {
 		v := header.Get(m.Name)
 		if v == "" || !(r.matcher.matchExactHeader(m, v) || r.matcher.matchRegexHeader(m, v)) {
@@ -117,4 +118,3 @@ func (r *Router) matchHeaderPattern(headerMatches []*api.HeaderMatch, header htt
 	}
 	return true
 }
-
