@@ -14,7 +14,7 @@ type ClusterWeightPair struct {
 	name string
 	weight uint32
 	effectiveWeight uint32
-	currentWeight uint32
+	currentWeight int32
 }
 
 type SmoothWeightedClusterPicker struct {
@@ -44,10 +44,10 @@ func (p *SmoothWeightedClusterPicker) NextCluster() string {
 	defer p.mutex.Unlock()
 
 	// A smooth load balancing algorithm for weighted round-robin.
-	var total uint32 = 0
+	var total int32 = 0
 	for _, pair := range p.weightedPairs {
-		pair.currentWeight += pair.effectiveWeight
-		total += pair.effectiveWeight
+		pair.currentWeight += int32(pair.effectiveWeight)
+		total += int32(pair.effectiveWeight)
 	}
 	max := p.weightedPairs[0]
 	for _, pair := range p.weightedPairs {

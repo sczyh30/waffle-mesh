@@ -2,11 +2,14 @@ package cluster
 
 import (
 	"github.com/sczyh30/waffle-mesh/api/gen"
+	"reflect"
 )
 
 // Not thread-safe.
 type LoadBalancer interface {
 	PickHost(m *LbMetadata) (*api.HttpAddress, error)
+
+	DoModify(endpoints []*api.Endpoint) bool
 }
 
 type LbMetadata struct {
@@ -16,19 +19,21 @@ type LbMetadata struct {
 type EndpointWeightPair struct {
 	endpoint *api.Endpoint
 	effectiveWeight uint32
-	currentWeight uint32
+	currentWeight int32
 }
 
 type RoundRobinLoadBalancer struct {
 	endpoints []*EndpointWeightPair
+	existMap map[hostAddress]*api.Endpoint
 }
 
 func (lb *RoundRobinLoadBalancer) PickHost(m *LbMetadata) (*api.HttpAddress, error) {
 	// A smooth load balancing algorithm for weighted round-robin.
-	var total uint32 = 0
+	var total int32 = 0
 	for _, pair := range lb.endpoints {
-		pair.currentWeight += pair.effectiveWeight
-		total += pair.effectiveWeight
+		// fmt.Printf("%v:%d\n", pair.endpoint, pair.currentWeight)
+		pair.currentWeight += int32(pair.effectiveWeight)
+		total += int32(pair.effectiveWeight)
 	}
 	max := lb.endpoints[0]
 	for _, pair := range lb.endpoints {
@@ -42,17 +47,50 @@ func (lb *RoundRobinLoadBalancer) PickHost(m *LbMetadata) (*api.HttpAddress, err
 	return max.endpoint.Address, nil
 }
 
-func NewSmoothWeightedRoundRobinLoadBalancer(e *api.ClusterEndpoints) *RoundRobinLoadBalancer {
-	endpoints := make([]*EndpointWeightPair, len(e.Endpoints))
-	for i, endpoint := range e.Endpoints {
-		endpoints[i] = &EndpointWeightPair{
+func (lb *RoundRobinLoadBalancer) DoModify(endpoints []*api.Endpoint) bool {
+	canModify := func() bool {
+		for _, newEndpoint := range endpoints {
+			if old, exists := lb.existMap[toHostAddress(newEndpoint.Address)]; !exists {
+				return true
+			} else {
+				if !reflect.DeepEqual(old, newEndpoint) {
+					return true
+				}
+			}
+		}
+		return false
+	} ()
+	if canModify {
+		lb.reset(endpoints)
+	}
+	return canModify
+}
+
+func (lb *RoundRobinLoadBalancer) reset(e []*api.Endpoint) {
+	endpoints, existsMap := fromEndpoints(e)
+	lb.endpoints = endpoints
+	lb.existMap = existsMap
+}
+
+func fromEndpoints(endpoints []*api.Endpoint) ([]*EndpointWeightPair, map[hostAddress]*api.Endpoint) {
+	pair := make([]*EndpointWeightPair, len(endpoints))
+	existsMap := make(map[hostAddress]*api.Endpoint)
+	for i, endpoint := range endpoints {
+		existsMap[toHostAddress(endpoint.Address)] = endpoint
+		pair[i] = &EndpointWeightPair{
 			endpoint: endpoint,
 			effectiveWeight: endpoint.LbWeight,
 			currentWeight: 0,
 		}
 	}
+	return pair, existsMap
+}
+
+func NewSmoothWeightedRoundRobinLoadBalancer(e *api.ClusterEndpoints) *RoundRobinLoadBalancer {
+	endpoints, existsMap := fromEndpoints(e.Endpoints)
 	return &RoundRobinLoadBalancer{
 		endpoints: endpoints,
+		existMap: existsMap,
 	}
 }
 
@@ -62,6 +100,10 @@ type RandomLoadBalancer struct {
 
 func (lb *RandomLoadBalancer) PickHost(m *LbMetadata) (*api.HttpAddress, error) {
 	return nil, nil
+}
+
+func (lb *RandomLoadBalancer) DoModify(endpoints []*api.Endpoint) bool {
+	return false
 }
 
 func NewRandomLoadBalancer(e *api.ClusterEndpoints) *RandomLoadBalancer {
@@ -76,4 +118,8 @@ type ConsistentHashLoadBalancer struct {
 
 func (lb *ConsistentHashLoadBalancer) PickHost(m *LbMetadata) (*api.HttpAddress, error) {
 	return nil, nil
+}
+
+func (lb *ConsistentHashLoadBalancer) DoModify(endpoints []*api.Endpoint) bool {
+	return false
 }

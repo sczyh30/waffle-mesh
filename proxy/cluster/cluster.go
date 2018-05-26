@@ -9,6 +9,7 @@ import (
 	"github.com/sczyh30/waffle-mesh/proxy/network/core"
 	"encoding/json"
 	"log"
+	"reflect"
 )
 
 type ClientPool map[hostAddress]*http.Client
@@ -53,31 +54,37 @@ func (c *ClusterEntry) doUpdate(newConfig *api.Cluster, newEndpoints *api.Cluste
 	log.Printf("New endpoints: %v\n", string(data))
 	log.Println("==================")
 
-	// Update LB.
 	oldConfig := c.config
+	// Update LB.
 	if newConfig.LbStrategy != oldConfig.LbStrategy {
 		c.lb = newLoadBalancerFrom(newConfig, newEndpoints)
 	}
 	// Update cluster config.
 	c.config = newConfig
-	// Build endpoint map to avoid iteration.
-	endpointMap := make(map[hostAddress]bool)
-	for _, ep := range newEndpoints.Endpoints {
-		endpointMap[toHostAddress(ep.Address)] = true
-	}
-	// Update client pool.
-	for k := range c.clientPool {
-		if _, exists := endpointMap[k]; !exists {
-			delete(c.clientPool, k)
+	// Update endpoints.
+	if !reflect.DeepEqual(c.endpoints, newEndpoints) {
+		// Build endpoint map to avoid iteration.
+		endpointMap := make(map[hostAddress]bool)
+		for _, ep := range newEndpoints.Endpoints {
+			endpointMap[toHostAddress(ep.Address)] = true
 		}
-	}
-	for k := range endpointMap {
-		if _, exists := c.clientPool[k]; !exists {
-			c.clientPool[k] = core.NewHttp2Client()
+		// Update client pool.
+		for k := range c.clientPool {
+			if _, exists := endpointMap[k]; !exists {
+				delete(c.clientPool, k)
+			}
 		}
+		for k := range endpointMap {
+			if _, exists := c.clientPool[k]; !exists {
+				c.clientPool[k] = core.NewHttp2Client()
+			}
+		}
+		// Update endpoints
+		c.endpoints = newEndpoints
+		// Update LB.
+		c.lb.DoModify(newEndpoints.Endpoints)
 	}
-	// Update endpoints
-	c.endpoints = newEndpoints
+
 
 	return nil
 }

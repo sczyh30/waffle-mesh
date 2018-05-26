@@ -13,12 +13,12 @@ type XdsResourceUpdater struct {
 	k8sController *k8s.Controller
 	crdController *crd.RouteRuleController
 
-	converter *ConfigConverter
+	converter *ResourceConverter
 }
 
 func NewXdsResourceUpdater(kc *k8s.Controller, cc *crd.RouteRuleController) *XdsResourceUpdater {
 	return &XdsResourceUpdater{
-		converter: NewConfigConverter(kc, cc),
+		converter:     NewResourceConverter(kc, cc),
 		k8sController: kc,
 		crdController: cc,
 	}

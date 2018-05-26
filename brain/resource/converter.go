@@ -22,19 +22,19 @@ const (
 	DefaultClientTimeoutInMs = 5000
 )
 
-type ConfigConverter struct {
+type ResourceConverter struct {
 	k8sController *k8s.Controller
 	crdController *crd.RouteRuleController
 }
 
-func NewConfigConverter(kc *k8s.Controller, cc *crd.RouteRuleController) *ConfigConverter {
-	return &ConfigConverter{
+func NewResourceConverter(kc *k8s.Controller, cc *crd.RouteRuleController) *ResourceConverter {
+	return &ResourceConverter{
 		k8sController: kc,
 		crdController: cc,
 	}
 }
 
-func (c *ConfigConverter) BuildOutboundClusters(routes []*api.RouteConfig, selectors map[string]ClusterSelectorPair) []*api.Cluster {
+func (c *ResourceConverter) BuildOutboundClusters(routes []*api.RouteConfig, selectors map[string]ClusterSelectorPair) []*api.Cluster {
 	var clusters []*api.Cluster
 	for _, csPair := range selectors {
 		cluster := &api.Cluster{
@@ -47,7 +47,7 @@ func (c *ConfigConverter) BuildOutboundClusters(routes []*api.RouteConfig, selec
 	return clusters
 }
 
-func (c *ConfigConverter) BuildClusterEndpoints(selectorMap map[string]ClusterSelectorPair) []*api.ClusterEndpoints {
+func (c *ResourceConverter) BuildClusterEndpoints(selectorMap map[string]ClusterSelectorPair) []*api.ClusterEndpoints {
 	var clusterEndpoints []*api.ClusterEndpoints
 	for _, s := range selectorMap {
 		ce, err := c.buildEndpointForCluster(s)
@@ -65,7 +65,7 @@ func (c *ConfigConverter) BuildClusterEndpoints(selectorMap map[string]ClusterSe
 	return clusterEndpoints
 }
 
-func (c *ConfigConverter) matchAllLabels(expected map[string]string, actual map[string]string) bool {
+func (c *ResourceConverter) matchAllLabels(expected map[string]string, actual map[string]string) bool {
 	for k, v := range expected {
 		if actual[k] != v {
 			return false
@@ -74,7 +74,7 @@ func (c *ConfigConverter) matchAllLabels(expected map[string]string, actual map[
 	return true
 }
 
-func (c *ConfigConverter) buildEndpointForCluster(selectorCluster ClusterSelectorPair) (*api.ClusterEndpoints, error) {
+func (c *ResourceConverter) buildEndpointForCluster(selectorCluster ClusterSelectorPair) (*api.ClusterEndpoints, error) {
 	result := &api.ClusterEndpoints{ClusterName: selectorCluster.clusterName}
 	var endpoints []*api.Endpoint
 
@@ -117,11 +117,11 @@ func (c *ConfigConverter) buildEndpointForCluster(selectorCluster ClusterSelecto
 	return nil, nil
 }
 
-func (c *ConfigConverter) BuildInboundClusters() []*api.Cluster {
+func (c *ResourceConverter) BuildInboundClusters() []*api.Cluster {
 	return nil
 }
 
-func (c *ConfigConverter) parseWeightSelectorPair(serviceName string, weightSelectorPair crdV1.RouteSelectorWeight) (string, ClusterSelectorPair) {
+func (c *ResourceConverter) parseWeightSelectorPair(serviceName string, weightSelectorPair crdV1.RouteSelectorWeight) (string, ClusterSelectorPair) {
 	labelSelectorDesc := c.parseLabelSelectors(weightSelectorPair.Labels)
 	// Generate final cluster name.
 	clusterName := fmt.Sprintf("%s|%s|%s|%s", OutboundPrefix, serviceName, HttpTypePrefix, labelSelectorDesc)
@@ -134,7 +134,7 @@ func (c *ConfigConverter) parseWeightSelectorPair(serviceName string, weightSele
 	return clusterName, clusterSelectorPair
 }
 
-func (c *ConfigConverter) AggregateProxyRouteConfigs(rules []*crdV1.RouteRule) ([]*api.RouteConfig, map[string]ClusterSelectorPair) {
+func (c *ResourceConverter) AggregateProxyRouteConfigs(rules []*crdV1.RouteRule) ([]*api.RouteConfig, map[string]ClusterSelectorPair) {
 	var configs []*api.RouteConfig
 	selectors := make(map[string]ClusterSelectorPair)
 
@@ -204,7 +204,7 @@ func (c *ConfigConverter) AggregateProxyRouteConfigs(rules []*crdV1.RouteRule) (
 	return configs, selectors
 }
 
-func(c *ConfigConverter) parseLabelSelectors(labelMap map[string]string) string {
+func(c *ResourceConverter) parseLabelSelectors(labelMap map[string]string) string {
 	var labels []string
 	for l, v := range labelMap {
 		labels = append(labels, fmt.Sprintf("%s=%s", l, v))
@@ -212,7 +212,7 @@ func(c *ConfigConverter) parseLabelSelectors(labelMap map[string]string) string 
 	return strings.Join(labels, ",")
 }
 
-func(c *ConfigConverter) parseRouteDomains(serviceName string) []string {
+func(c *ResourceConverter) parseRouteDomains(serviceName string) []string {
 	var domains []string
 	namespace := "default"
 	// Add serviceName as a domain.
@@ -233,7 +233,7 @@ func(c *ConfigConverter) parseRouteDomains(serviceName string) []string {
 	return domains
 }
 
-func (c *ConfigConverter) convertRouteMatchCondition(match *crdV1.RouteMatchCondition) *api.RouteMatch {
+func (c *ResourceConverter) convertRouteMatchCondition(match *crdV1.RouteMatchCondition) *api.RouteMatch {
 	convertedMatch := &api.RouteMatch{}
 	uriHeaderName := "uri"
 	uriMatch := match.Request.Headers[uriHeaderName]

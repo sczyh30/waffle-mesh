@@ -73,7 +73,7 @@ func (s *ProxyServer) StartProxy(stop chan struct{}) error {
 
 func (s *ProxyServer) initMetricsServer(args *ProxyArgs) error {
 	ms := metrics.NewMetricsServer(args.MetricsPort)
-	s.metricsServer = &ms
+	s.metricsServer = ms
 
 	s.AddStartHandler(func(stop chan struct{}) error {
 		go ms.Start(stop)

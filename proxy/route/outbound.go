@@ -58,7 +58,7 @@ func (r *OutboundRouter) executeRouteAction(action *RouteActionWrapper, w http.R
 	log.Printf("Cluster name: %s\n", targetCluster.Name())
 	log.Printf("Picked endpoint: %s:%d\n", address.Host, address.Port)
 
-	targetUrl := "https://" + address.Host + ":" + fmt.Sprint(address.Port) + request.RequestURI
+	targetUrl := "http://" + address.Host + ":" + fmt.Sprint(address.Port) + request.RequestURI
 	newRequest, err := http.NewRequest(request.Method, targetUrl, request.Body)
 	h := request.Header
 	h.Add("x-waffle-proxy-from", request.Host)

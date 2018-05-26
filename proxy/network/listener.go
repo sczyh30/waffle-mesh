@@ -32,7 +32,7 @@ type listenerImpl struct {
 	handlerChain []HttpHandler
 	config config.ServerConfig
 
-	mutex *sync.RWMutex
+	mutex sync.RWMutex
 }
 
 func (l *listenerImpl) AddHandler(handler HttpHandler) {
@@ -73,6 +73,7 @@ func NewListener(serverType ServerType, config config.ServerConfig) Listener {
 	l := &listenerImpl{
 		serverType: serverType,
 		config: config,
+		mutex: sync.RWMutex{},
 	}
 	if serverType == HTTP2 {
 		l.server = core.NewHttp2Server()

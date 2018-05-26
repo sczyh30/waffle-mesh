@@ -10,21 +10,18 @@ import (
 	"github.com/sczyh30/waffle-mesh/api/gen"
 )
 
-type MonitorServer interface {
-	Start(stop chan struct{}) error
-}
 
-type simpleMetricsServer struct {
+type MonitorServer struct {
 	ws   *restful.WebService
 	port uint32
 }
 
-func (s *simpleMetricsServer) Start(stop chan struct{}) error {
+func (s *MonitorServer) Start(stop chan struct{}) error {
 	restful.Add(s.ws)
 	return http.ListenAndServe(fmt.Sprintf(":%d", s.port), nil)
 }
 
-func NewMetricsServer(port uint32) MonitorServer {
+func NewMetricsServer(port uint32) *MonitorServer {
 	ws := new(restful.WebService)
 	ws.Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)
@@ -32,7 +29,7 @@ func NewMetricsServer(port uint32) MonitorServer {
 	ws.Route(ws.GET("/route_rules").To(handleGetRouteRules))
 	ws.Route(ws.GET("/clusters").To(handleGetClusters))
 	ws.Route(ws.GET("/endpoints").To(handleGetClusterEndpoints))
-	return &simpleMetricsServer{
+	return &MonitorServer{
 		ws:   ws,
 		port: port,
 	}
