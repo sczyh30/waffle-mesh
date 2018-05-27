@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+
 	"github.com/sczyh30/waffle-mesh/pkg/cmd"
 	"github.com/sczyh30/waffle-mesh/brain/bootstrap"
 )
@@ -45,6 +46,8 @@ func main() {
 func init() {
 	command.PersistentFlags().Uint32Var(&brainArgs.XdsProviderPort, "xdsPort",
 		bootstrap.DefaultXdsProviderPort, "Port of discovery service server (gRPC)")
+	command.PersistentFlags().Uint32Var(&brainArgs.MetricsServerPort, "metricsPort",
+		bootstrap.DefaultMetricsServerPort, "Port of metrics server")
 
 	flag.CommandLine.VisitAll(func(gf *flag.Flag) {
 		command.PersistentFlags().AddGoFlag(gf)

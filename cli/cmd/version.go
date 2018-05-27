@@ -10,7 +10,7 @@ var versionCommand = &cobra.Command {
 	Use:   "version",
 	Short: "Print the Waffle client and server version information",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("0.1")
+		fmt.Println("1.0")
 	},
 	Args: cobra.NoArgs,
 }

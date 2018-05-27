@@ -96,12 +96,12 @@ func (c *ResourceConverter) buildEndpointForCluster(selectorCluster ClusterSelec
 						continue
 					}
 
-					//pod, exists := podCache.GetPodByIP(ea.IP)
 					// TODO: check here
 					if exists {
 						for _, port := range service.Spec.Ports {
 							endpoints = append(endpoints, &api.Endpoint{
 								Address: &api.HttpAddress{Host: ea.IP, Port: uint32(port.Port)},
+								LbWeight: 1,
 							})
 						}
 					} else {

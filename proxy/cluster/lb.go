@@ -3,6 +3,7 @@ package cluster
 import (
 	"github.com/sczyh30/waffle-mesh/api/gen"
 	"reflect"
+	"log"
 )
 
 // Not thread-safe.
@@ -25,6 +26,8 @@ type EndpointWeightPair struct {
 type RoundRobinLoadBalancer struct {
 	endpoints []*EndpointWeightPair
 	existMap map[hostAddress]*api.Endpoint
+
+	clusterName string
 }
 
 func (lb *RoundRobinLoadBalancer) PickHost(m *LbMetadata) (*api.HttpAddress, error) {
@@ -62,6 +65,7 @@ func (lb *RoundRobinLoadBalancer) DoModify(endpoints []*api.Endpoint) bool {
 	} ()
 	if canModify {
 		lb.reset(endpoints)
+		log.Printf("Load balancer for cluster <%s> modified\n", lb.clusterName)
 	}
 	return canModify
 }
@@ -86,9 +90,10 @@ func fromEndpoints(endpoints []*api.Endpoint) ([]*EndpointWeightPair, map[hostAd
 	return pair, existsMap
 }
 
-func NewSmoothWeightedRoundRobinLoadBalancer(e *api.ClusterEndpoints) *RoundRobinLoadBalancer {
+func NewSmoothWeightedRoundRobinLoadBalancer(name string, e *api.ClusterEndpoints) *RoundRobinLoadBalancer {
 	endpoints, existsMap := fromEndpoints(e.Endpoints)
 	return &RoundRobinLoadBalancer{
+		clusterName: name,
 		endpoints: endpoints,
 		existMap: existsMap,
 	}

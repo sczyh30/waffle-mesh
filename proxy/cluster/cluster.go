@@ -116,10 +116,10 @@ func toHostAddress(address *api.HttpAddress) hostAddress {
 func newLoadBalancerFrom(config *api.Cluster, endpoints *api.ClusterEndpoints) LoadBalancer {
 	switch config.LbStrategy {
 	case api.Cluster_ROUND_ROBIN:
-		return NewSmoothWeightedRoundRobinLoadBalancer(endpoints)
+		return NewSmoothWeightedRoundRobinLoadBalancer(config.Name, endpoints)
 	case api.Cluster_RANDOM:
 		return NewRandomLoadBalancer(endpoints)
 	default:
-		return NewSmoothWeightedRoundRobinLoadBalancer(endpoints)
+		return NewSmoothWeightedRoundRobinLoadBalancer(config.Name, endpoints)
 	}
 }

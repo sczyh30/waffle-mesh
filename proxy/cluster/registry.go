@@ -1,12 +1,14 @@
 package cluster
 
 import (
-	"github.com/sczyh30/waffle-mesh/api/gen"
-	"github.com/sczyh30/waffle-mesh/proxy/network/core"
-	"golang.org/x/time/rate"
-	"reflect"
 	"encoding/json"
 	"log"
+	"reflect"
+
+	"golang.org/x/time/rate"
+
+	"github.com/sczyh30/waffle-mesh/api/gen"
+	"github.com/sczyh30/waffle-mesh/proxy/network/core"
 )
 
 type ClusterRegistry struct {

@@ -3,19 +3,22 @@ package bootstrap
 import (
 	"log"
 
+	"k8s.io/client-go/kubernetes"
+
 	"github.com/sczyh30/waffle-mesh/brain/discovery"
 	"github.com/sczyh30/waffle-mesh/brain/k8s"
-	"k8s.io/client-go/kubernetes"
 	"github.com/sczyh30/waffle-mesh/brain/k8s/crd"
 	"github.com/sczyh30/waffle-mesh/brain/resource"
 )
 
 const (
-	DefaultXdsProviderPort = 24242
+	DefaultXdsProviderPort   = 24242
+	DefaultMetricsServerPort = 18206
 )
 
 type BrainArgs struct {
 	XdsProviderPort uint32
+	MetricsServerPort uint32
 }
 
 type startHandler func(chan struct{}) error
