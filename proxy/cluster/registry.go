@@ -48,7 +48,7 @@ func removeCluster(name string) *ClusterEntry {
 
 func addClusterEntry(name string, cluster *ClusterEntry) {
 	data, _ := json.Marshal(cluster.config)
-	log.Printf("New added cluster: %s\n", string(data))
+	log.Printf("[ClusterRegistry] New added cluster: %s\n", string(data))
 
 	runtimeClusterRegistry.registryMap[name] = cluster
 }

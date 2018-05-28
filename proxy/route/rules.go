@@ -25,7 +25,7 @@ func getRouteAction(routeName string, action *api.RouteAction) *RouteActionWrapp
 	}
 	// No match, new create.
 	out := fromAction(action)
-	ac = append(ac, out)
+	routeActionCache[routeName] = append(ac, out)
 	return out
 }
 
@@ -46,9 +46,9 @@ func updateRouteRule(newConfig *api.RouteConfig) {
 	} else {
 		if !reflect.DeepEqual(newConfig, oldConfig) {
 			data, _ := json.Marshal(oldConfig)
-			log.Printf("Rule to update (old): %s\n", data)
+			log.Printf("[Rules] Rule to update (old): %s\n", data)
 			data, _ = json.Marshal(newConfig)
-			log.Printf("Rule to update (new): %s\n", data)
+			log.Printf("[Rules] Rule to update (new): %s\n", data)
 
 			routeTable[newConfig.Name] = newConfig
 			// TODO Check if changes made.
@@ -105,6 +105,7 @@ type RouteActionWrapper struct {
 }
 
 func fromAction(action *api.RouteAction) *RouteActionWrapper {
+	log.Printf("[Rules] New route action added: %v\n", action)
 	if action.GetCluster() != "" {
 		return &RouteActionWrapper{
 			Action: action,

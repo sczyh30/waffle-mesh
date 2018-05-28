@@ -55,8 +55,7 @@ func (r *OutboundRouter) executeRouteAction(action *RouteActionWrapper, w http.R
 		return
 	}
 
-	log.Printf("Cluster name: %s\n", targetCluster.Name())
-	log.Printf("Picked endpoint: %s:%d\n", address.Host, address.Port)
+	log.Printf("[Outbound] Cluster name: %s, picked endpoint: %s:%d\n", targetCluster.Name(), address.Host, address.Port)
 
 	targetUrl := "http://" + address.Host + ":" + fmt.Sprint(address.Port) + request.RequestURI
 	newRequest, err := http.NewRequest(request.Method, targetUrl, request.Body)

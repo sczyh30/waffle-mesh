@@ -52,6 +52,9 @@ func (lb *RoundRobinLoadBalancer) PickHost(m *LbMetadata) (*api.HttpAddress, err
 
 func (lb *RoundRobinLoadBalancer) DoModify(endpoints []*api.Endpoint) bool {
 	canModify := func() bool {
+		if len(endpoints) != len(lb.endpoints) {
+			return true
+		}
 		for _, newEndpoint := range endpoints {
 			if old, exists := lb.existMap[toHostAddress(newEndpoint.Address)]; !exists {
 				return true
