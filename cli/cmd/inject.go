@@ -129,11 +129,11 @@ func injectPodTemplateSpec(t *v1.PodTemplateSpec) bool {
 		},
 		Ports: []v1.ContainerPort{
 			{
-				Name:          "waffle-proxy-inbound",
+				Name:          "proxy-inbound",
 				ContainerPort: int32(proxyInboundPort),
 			},
 			{
-				Name:          "waffle-proxy-metrics",
+				Name:          "proxy-metrics",
 				ContainerPort: int32(proxyMetricsPort),
 			},
 		},
@@ -146,16 +146,6 @@ func injectPodTemplateSpec(t *v1.PodTemplateSpec) bool {
 		SecurityContext: &v1.SecurityContext{
 			Capabilities: &v1.Capabilities{
 				Add: []v1.Capability{v1.Capability("NET_ADMIN")},
-			},
-		},
-		Ports: []v1.ContainerPort{
-			{
-				Name:          "waffle-proxy-inbound",
-				ContainerPort: int32(proxyInboundPort),
-			},
-			{
-				Name:          "waffle-proxy-metrics",
-				ContainerPort: int32(proxyMetricsPort),
 			},
 		},
 	}

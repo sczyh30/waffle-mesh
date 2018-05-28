@@ -10,8 +10,13 @@ echo "Building Waffle Proxy bin..."
 cd ../proxy
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build main.go
 chmod +x main
+echo "Building Waffle CLI..."
+cd ../cli
+go build -o waffle-cli main.go
+chmod +x waffle-cli
 
 echo "Building Docker image for Waffle Proxy..."
+cd ../proxy
 docker build -t waffle.io/waffle-proxy:latest .
 rm main
 cd ../brain
