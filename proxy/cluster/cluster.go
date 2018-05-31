@@ -1,15 +1,16 @@
 package cluster
 
 import (
-	"net/http"
-	"sync"
-
-	"github.com/sczyh30/waffle-mesh/api/gen"
-	"golang.org/x/time/rate"
-	"github.com/sczyh30/waffle-mesh/proxy/network/core"
 	"encoding/json"
 	"log"
+	"net/http"
 	"reflect"
+	"sync"
+
+	"golang.org/x/time/rate"
+
+	"github.com/sczyh30/waffle-mesh/api/gen"
+	"github.com/sczyh30/waffle-mesh/proxy/network/core"
 )
 
 type ClientPool map[hostAddress]*http.Client

@@ -5,8 +5,6 @@ import (
 	"log"
 	"reflect"
 
-	"golang.org/x/time/rate"
-
 	"github.com/sczyh30/waffle-mesh/api/gen"
 	"github.com/sczyh30/waffle-mesh/proxy/network/core"
 )
@@ -93,13 +91,12 @@ func addNewClusterInternal(cluster *api.Cluster, endpoints *api.ClusterEndpoints
 	}
 	// Build load balancer.
 	lb := newLoadBalancerFrom(cluster, endpoints)
-	// Build load balancer.
+
 	entry := &ClusterEntry{
 		name: cluster.Name,
 		endpoints: endpoints,
 		config: cluster,
 		clientPool: make(ClientPool),
-		rateLimiter: &rate.Limiter{},
 		lb: lb,
 	}
 	addClusterEntry(cluster.Name, entry)

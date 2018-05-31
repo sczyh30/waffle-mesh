@@ -52,13 +52,13 @@ func (c *ResourceConverter) BuildClusterEndpoints(selectorMap map[string]Cluster
 	for _, s := range selectorMap {
 		ce, err := c.buildEndpointForCluster(s)
 		if err != nil {
-			log.Printf("Error when building endpoints for service <%s> (logical cluster: %s)\n", s.serviceName, s.clusterName)
+			log.Printf("[ResConverter] Error when building endpoints for service <%s> (logical cluster: %s)\n", s.serviceName, s.clusterName)
 			continue
 		}
 		if ce != nil {
 			clusterEndpoints = append(clusterEndpoints, ce)
 		} else {
-			log.Printf("Cannot retrieve service <%s> (logical cluster: %s) when building endpoints\n", s.serviceName, s.clusterName)
+			log.Printf("[ResConverter] Cannot retrieve service <%s> (logical cluster: %s) when building endpoints\n", s.serviceName, s.clusterName)
 
 		}
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/sczyh30/waffle-mesh/brain/k8s"
 	"github.com/sczyh30/waffle-mesh/brain/k8s/crd"
 	"github.com/sczyh30/waffle-mesh/brain/resource"
+	"github.com/sczyh30/waffle-mesh/brain/metrics"
 )
 
 const (
@@ -31,6 +32,8 @@ type BrainServer struct {
 	k8sClient kubernetes.Interface
 	k8sController *k8s.Controller
 	k8sRouteRuleController *crd.RouteRuleController
+
+	metricsServer *metrics.BrainMetricsServer
 
 	xdsUpdater *resource.XdsResourceUpdater
 }
@@ -123,5 +126,12 @@ func (s *BrainServer) initDiscoveryProvider(args *BrainArgs) error {
 }
 
 func (s *BrainServer) initMetricsServer(args *BrainArgs) error {
+	ms := metrics.NewBrainMetricsServer(args.MetricsServerPort)
+	s.metricsServer = ms
+
+	s.AddStartHandler(func(stop chan struct{}) error {
+		go ms.Start(stop)
+		return nil
+	})
 	return nil
 }

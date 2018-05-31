@@ -33,9 +33,9 @@ func (updater *XdsResourceUpdater) fetchAndUpdate() error {
 	XdsCache.updateCache(clusters, endpoints, routeConfigs)
 
 	data, _ := json.Marshal(endpoints)
-	log.Println("Xds endpoints updated: " + string(data))
+	log.Println("[ResUpdater] Xds endpoints updated: " + string(data))
 	data, _ = json.Marshal(routeConfigs)
-	log.Println("Xds route configs updated: " + string(data))
+	log.Println("[ResUpdater] Xds route configs updated: " + string(data))
 
 	return nil
 }

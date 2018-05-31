@@ -1,9 +1,10 @@
 package cluster
 
 import (
-	"github.com/sczyh30/waffle-mesh/api/gen"
-	"reflect"
 	"log"
+	"reflect"
+
+	"github.com/sczyh30/waffle-mesh/api/gen"
 )
 
 // Not thread-safe.
@@ -68,7 +69,7 @@ func (lb *RoundRobinLoadBalancer) DoModify(endpoints []*api.Endpoint) bool {
 	} ()
 	if canModify {
 		lb.reset(endpoints)
-		log.Printf("Load balancer for cluster <%s> modified\n", lb.clusterName)
+		log.Printf("[LB] Load balancer for cluster <%s> modified\n", lb.clusterName)
 	}
 	return canModify
 }

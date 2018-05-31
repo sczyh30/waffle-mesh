@@ -5,11 +5,11 @@ import (
 	"net/http"
 
 	"github.com/emicklei/go-restful"
+
 	"github.com/sczyh30/waffle-mesh/proxy/route"
 	"github.com/sczyh30/waffle-mesh/proxy/cluster"
 	"github.com/sczyh30/waffle-mesh/api/gen"
 )
-
 
 type MonitorServer struct {
 	ws   *restful.WebService
@@ -21,7 +21,7 @@ func (s *MonitorServer) Start(stop chan struct{}) error {
 	return http.ListenAndServe(fmt.Sprintf(":%d", s.port), nil)
 }
 
-func NewMetricsServer(port uint32) *MonitorServer {
+func NewProxyMetricsServer(port uint32) *MonitorServer {
 	ws := new(restful.WebService)
 	ws.Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)
