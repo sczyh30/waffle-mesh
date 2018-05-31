@@ -6,6 +6,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/sczyh30/waffle-mesh/api/gen"
 	"github.com/sczyh30/waffle-mesh/proxy/cluster"
@@ -57,15 +59,44 @@ func (r *OutboundRouter) executeRouteAction(action *RouteActionWrapper, w http.R
 
 	log.Printf("[Outbound] Cluster name: %s, picked endpoint: %s:%d\n", targetCluster.Name(), address.Host, address.Port)
 
-	targetUrl := "http://" + address.Host + ":" + fmt.Sprint(address.Port) + request.RequestURI
+	host := address.Host + ":" + fmt.Sprint(address.Port)
+	targetUrl := "http://" + host + request.RequestURI
 	newRequest, err := http.NewRequest(request.Method, targetUrl, request.Body)
+
+	if err != nil {
+		r.handleError(w, err, http.StatusInternalServerError)
+		return
+	}
+
 	h := request.Header
 	h.Add("x-waffle-proxy-from", request.Host)
 	newRequest.Header = h
 	response, err := client.Do(newRequest)
+
+	retryPolicy := NewRetryPolicy(action.Action.RetryStrategy)
+	for {
+		if shouldRetry(action.Action.RetryStrategy, response, err) {
+			if retryPolicy.AskForRetry() {
+				retryTimeout := retryPolicy.NextRetryTimeout()
+				// Sleep for timeouts.
+				time.Sleep(time.Millisecond * time.Duration(retryTimeout))
+
+				newRequest.Header.Add("x-waffle-proxy-retry", strconv.Itoa(retryPolicy.GetAttempts()))
+				// Do retry.
+				response, err = client.Do(newRequest)
+			} else {
+				// Retry times exceeded.
+				err = errors.New(fmt.Sprintf("service unavailable: cannot connect to %s after %d retries", host, retryPolicy.GetAttempts()))
+				r.handleError(w, err, http.StatusServiceUnavailable)
+				return
+			}
+		} else {
+			break
+		}
+	}
+
 	if err != nil {
-		w.WriteHeader(http.StatusServiceUnavailable)
-		fmt.Fprint(w, "service unavailable: " + err.Error())
+		r.handleError(w, err, http.StatusInternalServerError)
 		return
 	}
 
