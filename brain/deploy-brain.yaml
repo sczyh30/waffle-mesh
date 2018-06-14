@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: waffle-brain
+  labels:
+    app: waffle-brain
+spec:
+  selector:
+    app: waffle-brain
+  ports:
+    - port: 18206
+      name: http
+    - port: 24242
+      name: tcp
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: waffle-brain
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: waffle-brain
+    spec:
+      serviceAccount: k8s-test
+      containers:
+      - name: k8s-waffle-brain
+        image: waffle.io/waffle-brain:latest
+        imagePullPolicy: IfNotPresent

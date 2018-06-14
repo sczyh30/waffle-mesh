@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/sczyh30/waffle-mesh/api/gen"
+	"k8s.io/apimachinery/pkg/util/rand"
 )
 
 // Not thread-safe.
@@ -108,11 +109,14 @@ type RandomLoadBalancer struct {
 }
 
 func (lb *RandomLoadBalancer) PickHost(m *LbMetadata) (*api.HttpAddress, error) {
-	return nil, nil
+	n := len(lb.endpoints)
+	i := rand.IntnRange(0, n)
+	return lb.endpoints[i].Address, nil
 }
 
 func (lb *RandomLoadBalancer) DoModify(endpoints []*api.Endpoint) bool {
-	return false
+	lb.endpoints = endpoints
+	return true
 }
 
 func NewRandomLoadBalancer(e *api.ClusterEndpoints) *RandomLoadBalancer {

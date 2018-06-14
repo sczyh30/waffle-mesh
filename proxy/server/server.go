@@ -111,7 +111,7 @@ func (s *ProxyServer) initListener(args *ProxyArgs) error {
 	s.inboundListener = &inboundListener
 
 	// Init outbound listener (local service -> Waffle proxy)
-	outboundListener := network.NewListener(network.HTTP2, config.ServerConfig{
+	outboundListener := network.NewListener(network.HTTP1_1, config.ServerConfig{
 		Host: "localhost",
 		Port: int(args.OutboundListenerPort),
 		TlsConfig: config.TlsConfig{
